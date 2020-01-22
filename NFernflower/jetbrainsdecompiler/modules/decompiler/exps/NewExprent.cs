@@ -162,7 +162,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 				ClassesProcessor.ClassNode child = DecompilerContext.GetClassProcessor().GetMapRootClasses
 					().GetOrNull(newType.value);
 				// IDEA-204310 - avoid backtracking later on for lambdas (causes spurious imports)
-				if (!enumConst && (!lambda || DecompilerContext.GetOption(IIFernflowerPreferences
+				if (!enumConst && (!lambda || DecompilerContext.GetOption(IFernflowerPreferences
 					.Lambda_To_Anonymous_Class)))
 				{
 					string enclosing = null;
@@ -248,7 +248,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 				}
 				if (lambda)
 				{
-					if (!DecompilerContext.GetOption(IIFernflowerPreferences.Lambda_To_Anonymous_Class
+					if (!DecompilerContext.GetOption(IFernflowerPreferences.Lambda_To_Anonymous_Class
 						))
 					{
 						buf.SetLength(0);

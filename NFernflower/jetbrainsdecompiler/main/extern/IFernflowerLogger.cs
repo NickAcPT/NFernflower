@@ -1,5 +1,6 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System;
+using System.Linq;
 using Sharpen;
 
 namespace JetBrainsDecompiler.Main.Extern
@@ -38,13 +39,19 @@ namespace JetBrainsDecompiler.Main.Extern
 			{
 				RegisterValues<Severity>(Values());
 			}
+
+			public static Severity ValueOf(string value)
+			{
+				return GetEnumValues(typeof(Severity)).Cast<Severity>()
+					.First(c => c.name().Equals(value, StringComparison.OrdinalIgnoreCase));
+			}
 		}
 
 		private IFernflowerLogger.Severity severity = IFernflowerLogger.Severity.Info;
 
 		public virtual bool Accepts(IFernflowerLogger.Severity severity)
 		{
-			return severity.Ordinal() >= this.severity.Ordinal();
+			return severity.ordinal() >= this.severity.ordinal();
 		}
 
 		public virtual void SetSeverity(IFernflowerLogger.Severity severity)

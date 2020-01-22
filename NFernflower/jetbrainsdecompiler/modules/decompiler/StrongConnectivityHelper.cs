@@ -18,9 +18,9 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 
 		private HashSet<Statement> tset;
 
-		private IDictionary<Statement, int> dfsnummap;
+		private Dictionary<Statement, int> dfsnummap;
 
-		private IDictionary<Statement, int> lowmap;
+		private Dictionary<Statement, int> lowmap;
 
 		public StrongConnectivityHelper(Statement stat)
 		{
@@ -69,7 +69,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			lstSuccs.RemoveAll(setProcessed);
 			foreach (Statement succ in lstSuccs)
 			{
-				int secvalue;
+				int? secvalue;
 				if (tset.Contains(succ))
 				{
 					secvalue = dfsnummap.GetOrNullable(succ);
@@ -80,8 +80,8 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 					Visit(succ);
 					secvalue = lowmap.GetOrNullable(succ);
 				}
-				Sharpen.Collections.Put(lowmap, stat, System.Math.Min(lowmap.GetOrNullable(stat), 
-					secvalue));
+				Sharpen.Collections.Put(lowmap, stat, System.Math.Min(lowmap.GetOrNullable(stat) ?? 0, 
+					secvalue ?? 0));
 			}
 			if (lowmap.GetOrNullable(stat) == dfsnummap.GetOrNullable(stat))
 			{
@@ -97,8 +97,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			}
 		}
 
-		public static bool IsExitComponent<_T0>(List<_T0> lst)
-			where _T0 : Statement
+		public static bool IsExitComponent(List<Statement> lst)
 		{
 			HashSet<Statement> set = new HashSet<Statement>();
 			foreach (var stat in lst)
@@ -110,8 +109,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			return (set.Count == 0);
 		}
 
-		public static List<Statement> GetExitReps<_T0>(List<_T0> lst)
-			where _T0 : List<Statement>
+		public static List<Statement> GetExitReps(List<List<Statement>> lst)
 		{
 			List<Statement> res = new List<Statement>();
 			foreach (var comp in lst)

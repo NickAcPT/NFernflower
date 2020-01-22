@@ -1,6 +1,7 @@
 // Copyright 2000-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrainsDecompiler.Main;
 using JetBrainsDecompiler.Struct;
 using JetBrainsDecompiler.Struct.Attr;
@@ -13,7 +14,7 @@ namespace JetBrainsDecompiler.Main.Collectors
 	{
 		private const string Java_Lang_Package = "java.lang";
 
-		private readonly IDictionary<string, string> mapSimpleNames = new Dictionary<string
+		private readonly Dictionary<string, string> mapSimpleNames = new Dictionary<string
 			, string>();
 
 		private readonly HashSet<string> setNotImportedNames = new HashSet<string>();
@@ -42,7 +43,7 @@ namespace JetBrainsDecompiler.Main.Collectors
 				currentPackageSlash = string.Empty;
 				currentPackagePoint = string.Empty;
 			}
-			IDictionary<string, StructClass> classes = DecompilerContext.GetStructContext().GetClasses
+			Dictionary<string, StructClass> classes = DecompilerContext.GetStructContext().GetClasses
 				();
 			LinkedList<string> queue = new LinkedList<string>();
 			StructClass currentClass = root.classStruct;
@@ -50,9 +51,9 @@ namespace JetBrainsDecompiler.Main.Collectors
 			{
 				if (currentClass.superClass != null)
 				{
-					queue.Add(currentClass.superClass.GetString());
+					queue.AddLast(currentClass.superClass.GetString());
 				}
-				Java.Util.Collections.AddAll(queue, currentClass.GetInterfaceNames());
+				Sharpen.Collections.AddAll(queue, currentClass.GetInterfaceNames());
 				// all field names for the current class ..
 				foreach (StructField f in currentClass.GetFields())
 				{
@@ -191,12 +192,11 @@ namespace JetBrainsDecompiler.Main.Collectors
 
 		private List<string> PackImports()
 		{
-			return mapSimpleNames.Stream().Filter((KeyValuePair<string, string> ent) => !setNotImportedNames
+			return mapSimpleNames.Where((ent) => !setNotImportedNames
 				.Contains(ent.Key) && !(ent.Value.Length == 0) && !Java_Lang_Package.Equals(ent.
-				Value) && !ent.Value.Equals(currentPackagePoint)).Sorted(DictionaryEntry.ComparingByValue
-				<string, string>().ThenComparing(DictionaryEntry.ComparingByKey())).Map((KeyValuePair
-				<string, string> ent) => ent.Value + "." + ent.Key).Collect(Java.Util.Stream.Collectors
-				.ToList());
+				Value) && !ent.Value.Equals(currentPackagePoint)).OrderBy(c => c.Value)
+				.ThenBy(c => c.Key)
+				.Select((ent) => ent.Value + "." + ent.Key).ToList();
 		}
 		// exclude the current class or one of the nested ones
 		// empty, java.lang and the current packages

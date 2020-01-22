@@ -1,4 +1,6 @@
 // Copyright 2000-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
+
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using Sharpen;
@@ -30,9 +32,9 @@ namespace JetBrainsDecompiler.Util
 			}
 		}
 
-		public virtual FastFixedSetFactory.FastFixedSet<E> SpawnEmptySet()
+		public virtual FastFixedSetFactory<E>.FastFixedSet<E> SpawnEmptySet()
 		{
-			return new FastFixedSetFactory.FastFixedSet<E>(this);
+			return new FastFixedSetFactory<E>.FastFixedSet<E>(this);
 		}
 
 		private int GetDataLength()
@@ -53,16 +55,16 @@ namespace JetBrainsDecompiler.Util
 
 			private int[] data;
 
-			private FastFixedSet(FastFixedSetFactory<E> factory)
+			internal FastFixedSet(FastFixedSetFactory<E> factory)
 			{
 				this.factory = factory;
 				this.colValuesInternal = factory.GetInternalValuesCollection();
 				this.data = new int[factory.GetDataLength()];
 			}
 
-			public virtual FastFixedSetFactory.FastFixedSet<E> GetCopy()
+			public virtual FastFixedSetFactory<E>.FastFixedSet<E> GetCopy()
 			{
-				FastFixedSetFactory.FastFixedSet<E> copy = new FastFixedSetFactory.FastFixedSet<E
+				FastFixedSetFactory<E>.FastFixedSet<E> copy = new FastFixedSetFactory<E>.FastFixedSet<E
 					>(factory);
 				int arrlength = data.Length;
 				int[] cpdata = new int[arrlength];
@@ -107,7 +109,7 @@ namespace JetBrainsDecompiler.Util
 				return (data[index[0]] & index[1]) != 0;
 			}
 
-			public virtual bool Contains(FastFixedSetFactory.FastFixedSet<E> set)
+			public virtual bool Contains(FastFixedSetFactory<E>.FastFixedSet<E> set)
 			{
 				int[] extdata = set.GetData();
 				int[] intdata = data;
@@ -121,7 +123,7 @@ namespace JetBrainsDecompiler.Util
 				return true;
 			}
 
-			public virtual void Union(FastFixedSetFactory.FastFixedSet<E> set)
+			public virtual void Union(FastFixedSetFactory<E>.FastFixedSet<E> set)
 			{
 				int[] extdata = set.GetData();
 				int[] intdata = data;
@@ -131,7 +133,7 @@ namespace JetBrainsDecompiler.Util
 				}
 			}
 
-			public virtual void Intersection(FastFixedSetFactory.FastFixedSet<E> set)
+			public virtual void Intersection(FastFixedSetFactory<E>.FastFixedSet<E> set)
 			{
 				int[] extdata = set.GetData();
 				int[] intdata = data;
@@ -141,7 +143,7 @@ namespace JetBrainsDecompiler.Util
 				}
 			}
 
-			public virtual void Complement(FastFixedSetFactory.FastFixedSet<E> set)
+			public virtual void Complement(FastFixedSetFactory<E>.FastFixedSet<E> set)
 			{
 				int[] extdata = set.GetData();
 				int[] intdata = data;
@@ -157,11 +159,11 @@ namespace JetBrainsDecompiler.Util
 				{
 					return true;
 				}
-				if (!(Sharpen.Runtime.InstanceOf(o, typeof(FastFixedSetFactory.FastFixedSet<>))))
+				if (!(Sharpen.Runtime.InstanceOf(o, typeof(FastFixedSetFactory<E>.FastFixedSet<E>))))
 				{
 					return false;
 				}
-				int[] extdata = ((FastFixedSetFactory.FastFixedSet)o).GetData();
+				int[] extdata = ((FastFixedSetFactory<E>.FastFixedSet<E>)o).GetData();
 				int[] intdata = data;
 				for (int i = intdata.Length - 1; i >= 0; i--)
 				{
@@ -186,9 +188,9 @@ namespace JetBrainsDecompiler.Util
 				return true;
 			}
 
-			public override IEnumerator<E> GetEnumerator()
+			public IEnumerator<E> GetEnumerator()
 			{
-				return new FastFixedSetFactory.FastFixedSetIterator<E>(this);
+				return new FastFixedSetFactory<E>.FastFixedSetIterator<E>(this);
 			}
 
 			public virtual HashSet<E> ToPlainSet()
@@ -246,7 +248,12 @@ namespace JetBrainsDecompiler.Util
 				return buffer.ToString();
 			}
 
-			private int[] GetData()
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return GetEnumerator();
+			}
+
+			internal int[] GetData()
 			{
 				return data;
 			}
@@ -274,12 +281,22 @@ namespace JetBrainsDecompiler.Util
 
 			private int next_pointer = -1;
 
-			private FastFixedSetIterator(FastFixedSetFactory.FastFixedSet<E> set)
+			public FastFixedSetIterator(IEnumerable<E> fastFixedSet)
+			{
+				var set = (FastFixedSet<E>) fastFixedSet;
+				colValuesInternal = set.GetFactory().GetInternalValuesCollection();
+				data = set.GetData();
+				size = colValuesInternal.Count;
+			}
+
+			/*
+			internal FastFixedSetIterator(FastFixedSet<E> set)
 			{
 				colValuesInternal = set.GetFactory().GetInternalValuesCollection();
 				data = set.GetData();
 				size = colValuesInternal.Count;
 			}
+			*/
 
 			private int GetNextIndex(int index)
 			{
@@ -314,13 +331,20 @@ namespace JetBrainsDecompiler.Util
 				return -1;
 			}
 
-			public override bool MoveNext()
+			public bool MoveNext()
 			{
 				next_pointer = GetNextIndex(pointer);
 				return (next_pointer >= 0);
 			}
 
-			public override E Current
+			public void Reset()
+			{
+				throw new System.NotImplementedException();
+			}
+
+			object IEnumerator.Current => Current;
+
+			public E Current
 			{
 				get
 				{
@@ -337,14 +361,18 @@ namespace JetBrainsDecompiler.Util
 						}
 					}
 					next_pointer = -1;
-					return pointer < size ? colValuesInternal.GetKey(pointer) : null;
+					return pointer < size ? colValuesInternal.GetKey(pointer) : default;
 				}
 			}
 
-			public override void Remove()
+			public void Remove()
 			{
 				int[] index = colValuesInternal[pointer];
 				data[index[0]] &= ~index[1];
+			}
+
+			public void Dispose()
+			{
 			}
 		}
 	}

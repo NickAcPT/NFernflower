@@ -87,11 +87,11 @@ namespace JetBrainsDecompiler.Code
 				int op = operands[i];
 				if (op < 0)
 				{
-					res.Append(" -").Append(int.ToHexString(-op));
+					res.Append(" -").Append(Sharpen.Runtime.ToHexString(-op));
 				}
 				else
 				{
-					res.Append(" ").Append(int.ToHexString(op));
+					res.Append(" ").Append(Sharpen.Runtime.ToHexString(op));
 				}
 			}
 			return res.ToString();
@@ -99,8 +99,8 @@ namespace JetBrainsDecompiler.Code
 
 		public virtual Instruction Clone()
 		{
-			return Create(opcode, wide, group, bytecodeVersion, operands == null ? null : operands
-				.MemberwiseClone());
+			return Create(opcode, wide, group, bytecodeVersion, (int[]) (operands == null ? null : operands
+				.Clone()));
 		}
 	}
 }

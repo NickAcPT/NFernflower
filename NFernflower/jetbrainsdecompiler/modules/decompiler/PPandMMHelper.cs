@@ -17,7 +17,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			FlattenStatementsHelper flatthelper = new FlattenStatementsHelper();
 			DirectGraph dgraph = flatthelper.BuildDirectGraph(root);
 			LinkedList<DirectNode> stack = new LinkedList<DirectNode>();
-			stack.Add(dgraph.first);
+			stack.AddLast(dgraph.first);
 			HashSet<DirectNode> setVisited = new HashSet<DirectNode>();
 			bool res = false;
 			while (!(stack.Count == 0))

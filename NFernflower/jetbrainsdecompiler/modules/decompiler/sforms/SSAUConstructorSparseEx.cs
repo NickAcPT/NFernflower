@@ -236,7 +236,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 			// field access
 			if (expr.type == Exprent.Exprent_Field)
 			{
-				int index;
+				int? index;
 				if (mapFieldVars.ContainsKey(expr.id))
 				{
 					index = mapFieldVars.GetOrNullable(expr.id);
@@ -322,7 +322,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 								//ssuversions.createOrGetNode(phantomver);
 								ssuversions.CreateNode(phantomver);
 								VarVersionNode vernode = ssuversions.nodes.GetWithKey(varpaar);
-								FastSparseSetFactory.FastSparseSet<int> vers = factory.SpawnEmptySet();
+								FastSparseSetFactory<int>.FastSparseSet<int> vers = factory.SpawnEmptySet();
 								if (vernode.preds.Count == 1)
 								{
 									vers.Add(vernode.preds.GetEnumerator().Current.source.version);
@@ -353,7 +353,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 				VarExprent vardest = (VarExprent)expr;
 				int varindex = vardest.GetIndex();
 				int current_vers = vardest.GetVersion();
-				FastSparseSetFactory.FastSparseSet<int> vers = varmap.Get(varindex);
+				FastSparseSetFactory<int>.FastSparseSet<int> vers = varmap.Get(varindex);
 				int cardinality = vers.GetCardinality();
 				if (cardinality == 1)
 				{
@@ -413,10 +413,9 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 		}
 
 		// vers.size() == 0 means uninitialized variable, which is impossible
-		private void CreateOrUpdatePhiNode(VarVersionPair phivar, FastSparseSetFactory.FastSparseSet
-			<int> vers, Statement stat)
+		private void CreateOrUpdatePhiNode(VarVersionPair phivar, FastSparseSetFactory<int>.FastSparseSet<int> vers, Statement stat)
 		{
-			FastSparseSetFactory.FastSparseSet<int> versCopy = vers.GetCopy();
+			FastSparseSetFactory<int>.FastSparseSet<int> versCopy = vers.GetCopy();
 			HashSet<int> phiVers = new HashSet<int>();
 			// take into account the corresponding mm/pp node if existing
 			int ppvers = phantomppnodes.ContainsKey(phivar) ? phantomppnodes.GetOrNull(phivar
@@ -482,18 +481,18 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 			int? nextver = lastversion.GetOrNullable(var);
 			if (nextver == null)
 			{
-				nextver.Value = 1;
+				nextver = 1;
 			}
 			else
 			{
-				nextver.Value++;
+				nextver++;
 			}
 			Sharpen.Collections.Put(lastversion, var, nextver.Value);
 			// save the first protected range, containing current statement
 			if (stat != null)
 			{
 				// null iff phantom version
-				int firstRangeId = GetFirstProtectedRange(stat);
+				int? firstRangeId = GetFirstProtectedRange(stat);
 				if (firstRangeId != null)
 				{
 					Sharpen.Collections.Put(mapVersionFirstRange, new VarVersionPair(var, nextver.Value
@@ -630,14 +629,14 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 						}
 						SFormsFastMapDirect mapExitVar = mapNew.GetCopy();
 						mapExitVar.Complement(mapTrueSource);
-						foreach (KeyValuePair<int, FastSparseSetFactory.FastSparseSet<int>> ent in mapExitVar
+						foreach (KeyValuePair<int, FastSparseSetFactory<int>.FastSparseSet<int>> ent in mapExitVar
 							.EntryList())
 						{
 							foreach (int version in ent.Value)
 							{
 								int varindex = ent.Key;
 								VarVersionPair exitvar = new VarVersionPair(varindex, version);
-								FastSparseSetFactory.FastSparseSet<int> newSet = mapNew.Get(varindex);
+								FastSparseSetFactory<int>.FastSparseSet<int> newSet = mapNew.Get(varindex);
 								// remove the actual exit version
 								newSet.Remove(version);
 								// get or create phantom version
@@ -693,7 +692,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 			{
 				return false;
 			}
-			foreach (KeyValuePair<int, FastSparseSetFactory.FastSparseSet<int>> ent2 in map2.
+			foreach (KeyValuePair<int, FastSparseSetFactory<int>.FastSparseSet<int>> ent2 in map2.
 				EntryList())
 			{
 				if (!InterpreterUtil.EqualObjects(map1.Get(ent2.Key), ent2.Value))
@@ -704,11 +703,11 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 			return true;
 		}
 
-		private void SetCurrentVar(SFormsFastMapDirect varmap, int var, int vers)
+		private void SetCurrentVar(SFormsFastMapDirect varmap, int? var, int vers)
 		{
-			FastSparseSetFactory.FastSparseSet<int> set = factory.SpawnEmptySet();
+			FastSparseSetFactory<int>.FastSparseSet<int> set = factory.SpawnEmptySet();
 			set.Add(vers);
-			varmap.Put(var, set);
+			if (var.HasValue) varmap.Put(var.Value, set);
 		}
 
 		private void SetCatchMaps(Statement stat, DirectGraph dgraph, FlattenStatementsHelper
@@ -761,7 +760,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 			{
 				int version = GetNextFreeVersion(varindex, root);
 				// == 1
-				FastSparseSetFactory.FastSparseSet<int> set = factory.SpawnEmptySet();
+				FastSparseSetFactory<int>.FastSparseSet<int> set = factory.SpawnEmptySet();
 				set.Add(version);
 				map.Put(varindex, set);
 				ssuversions.CreateNode(new VarVersionPair(varindex, version));
@@ -784,7 +783,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 			return map;
 		}
 
-		private static int GetFirstProtectedRange(Statement stat)
+		private static int? GetFirstProtectedRange(Statement stat)
 		{
 			while (true)
 			{

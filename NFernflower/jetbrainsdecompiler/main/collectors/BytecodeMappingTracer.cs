@@ -13,7 +13,7 @@ namespace JetBrainsDecompiler.Main.Collectors
 
 		private StructLineNumberTableAttribute lineNumberTable = null;
 
-		private readonly IDictionary<int, int> mapping = new Dictionary<int, int>();
+		private readonly Dictionary<int, int> mapping = new Dictionary<int, int>();
 
 		public BytecodeMappingTracer()
 		{
@@ -62,7 +62,7 @@ namespace JetBrainsDecompiler.Main.Collectors
 			}
 		}
 
-		public virtual IDictionary<int, int> GetMapping()
+		public virtual Dictionary<int, int> GetMapping()
 		{
 			return mapping;
 		}
@@ -90,13 +90,13 @@ namespace JetBrainsDecompiler.Main.Collectors
 			return unmappedLines;
 		}
 
-		public virtual IDictionary<int, int> GetOriginalLinesMapping()
+		public virtual Dictionary<int, int> GetOriginalLinesMapping()
 		{
 			if (lineNumberTable == null)
 			{
 				return new System.Collections.Generic.Dictionary<int, int>();
 			}
-			IDictionary<int, int> res = new Dictionary<int, int>();
+			Dictionary<int, int> res = new Dictionary<int, int>();
 			// first match offsets from line number table
 			int[] data = lineNumberTable.GetRawData();
 			for (int i = 0; i < data.Length; i += 2)

@@ -1,6 +1,7 @@
 // Copyright 2000-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using JetBrainsDecompiler.Code;
 using JetBrainsDecompiler.Main;
@@ -42,9 +43,9 @@ namespace JetBrainsDecompiler.Main.Rels
 			DecompilerContext.SetProperty(DecompilerContext.Current_Class, classStruct);
 			DecompilerContext.SetProperty(DecompilerContext.Current_Class_Wrapper, this);
 			DecompilerContext.GetLogger().StartClass(classStruct.qualifiedName);
-			int maxSec = System.Convert.ToInt32(DecompilerContext.GetProperty(IIFernflowerPreferences
+			int maxSec = System.Convert.ToInt32(DecompilerContext.GetProperty(IFernflowerPreferences
 				.Max_Processing_Method).ToString());
-			bool testMode = DecompilerContext.GetOption(IIFernflowerPreferences.Unit_Test_Mode
+			bool testMode = DecompilerContext.GetOption(IFernflowerPreferences.Unit_Test_Mode
 				);
 			foreach (StructMethod mt in classStruct.GetMethods())
 			{
@@ -69,7 +70,10 @@ namespace JetBrainsDecompiler.Main.Rels
 						{
 							MethodProcessorRunnable mtProc = new MethodProcessorRunnable(mt, md, varProc, DecompilerContext
 								.GetCurrentContext());
-							Thread mtThread = new Thread(mtProc, "Java decompiler");
+							Thread mtThread = new Thread(o => mtProc.Run())
+							{
+								Name = "Java decompiler"
+							};
 							long stopAt = Runtime.CurrentTimeMillis() + maxSec * 1000L;
 							mtThread.Start();
 							while (!mtProc.IsFinished())
@@ -78,7 +82,7 @@ namespace JetBrainsDecompiler.Main.Rels
 								{
 									lock (mtProc.Lock)
 									{
-										Sharpen.Runtime.Wait(mtProc.Lock, 200);
+										Thread.Sleep(200);
 									}
 								}
 								catch (Exception e)
@@ -154,7 +158,7 @@ namespace JetBrainsDecompiler.Main.Rels
 						()));
 					varProc.RefreshVarNames(namesCollector);
 					// if debug information present and should be used
-					if (DecompilerContext.GetOption(IIFernflowerPreferences.Use_Debug_Var_Names))
+					if (DecompilerContext.GetOption(IFernflowerPreferences.Use_Debug_Var_Names))
 					{
 						StructLocalVariableTableAttribute attr = mt.GetLocalVariableAttr();
 						if (attr != null)
@@ -163,20 +167,20 @@ namespace JetBrainsDecompiler.Main.Rels
 							varProc.SetDebugVarNames(attr.GetMapParamNames());
 							// the rest is here
 							methodWrapper.GetOrBuildGraph().IterateExprents((Exprent exprent) => 							{
-								List<Exprent> lst = exprent.GetAllExprents(true);
-								lst.Add(exprent);
-								lst.Stream().Filter((Exprent e) => e.type == Exprent.Exprent_Var).ForEach((Exprent
-									 e) => 								{
-									VarExprent varExprent = (VarExprent)e;
-									string name = varExprent.GetDebugName(mt);
-									if (name != null)
-									{
-										varProc.SetVarName(varExprent.GetVarVersionPair(), name);
-									}
+									List<Exprent> lst = exprent.GetAllExprents(true);
+									lst.Add(exprent);
+									lst.Where(e => e.type == Exprent.Exprent_Var).ToList().ForEach((Exprent
+											e) => {
+											VarExprent varExprent = (VarExprent)e;
+											string name = varExprent.GetDebugName(mt);
+											if (name != null)
+											{
+												varProc.SetVarName(varExprent.GetVarVersionPair(), name);
+											}
+										}
+									);
+									return 0;
 								}
-);
-								return 0;
-							}
 );
 						}
 					}
@@ -188,7 +192,7 @@ namespace JetBrainsDecompiler.Main.Rels
 
 		private static void KillThread(Thread thread)
 		{
-			thread.Stop();
+			thread.Abort();
 		}
 
 		public virtual MethodWrapper GetMethodWrapper(string name, string descriptor)

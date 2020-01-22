@@ -1,6 +1,7 @@
 // Copyright 2000-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Java.Util;
 using JetBrainsDecompiler.Code;
@@ -37,16 +38,16 @@ namespace JetBrainsDecompiler.Main
 			StructClass cl = wrapper.GetClassStruct();
 			InitializerProcessor.ExtractInitializers(wrapper);
 			if (node.type == ClassesProcessor.ClassNode.Class_Root && !cl.IsVersionGE_1_5() &&
-				 DecompilerContext.GetOption(IIFernflowerPreferences.Decompile_Class_1_4))
+				 DecompilerContext.GetOption(IFernflowerPreferences.Decompile_Class_1_4))
 			{
 				ClassReference14Processor.ProcessClassReferences(node);
 			}
-			if (cl.HasModifier(ICodeConstants.Acc_Enum) && DecompilerContext.GetOption(IIFernflowerPreferences
+			if (cl.HasModifier(ICodeConstants.Acc_Enum) && DecompilerContext.GetOption(IFernflowerPreferences
 				.Decompile_Enum))
 			{
 				EnumProcessor.ClearEnum(wrapper);
 			}
-			if (DecompilerContext.GetOption(IIFernflowerPreferences.Decompile_Assertions))
+			if (DecompilerContext.GetOption(IFernflowerPreferences.Decompile_Assertions))
 			{
 				AssertProcessor.BuildAssertions(node);
 			}
@@ -60,7 +61,7 @@ namespace JetBrainsDecompiler.Main
 			{
 				return;
 			}
-			bool lambdaToAnonymous = DecompilerContext.GetOption(IIFernflowerPreferences.Lambda_To_Anonymous_Class
+			bool lambdaToAnonymous = DecompilerContext.GetOption(IFernflowerPreferences.Lambda_To_Anonymous_Class
 				);
 			ClassesProcessor.ClassNode outerNode = (ClassesProcessor.ClassNode)DecompilerContext
 				.GetProperty(DecompilerContext.Current_Class_Node);
@@ -159,7 +160,7 @@ namespace JetBrainsDecompiler.Main
 				dummy_tracer.IncrementCurrentSourceLine(buffer.CountLines(start_class_def));
 				foreach (StructField fd in cl.GetFields())
 				{
-					bool hide = fd.IsSynthetic() && DecompilerContext.GetOption(IIFernflowerPreferences
+					bool hide = fd.IsSynthetic() && DecompilerContext.GetOption(IFernflowerPreferences
 						.Remove_Synthetic) || wrapper.GetHiddenMembers().Contains(InterpreterUtil.MakeUniqueKey
 						(fd.GetName(), fd.GetDescriptor()));
 					if (hide)
@@ -167,7 +168,7 @@ namespace JetBrainsDecompiler.Main
 						continue;
 					}
 					bool isEnum = fd.HasModifier(ICodeConstants.Acc_Enum) && DecompilerContext.GetOption
-						(IIFernflowerPreferences.Decompile_Enum);
+						(IFernflowerPreferences.Decompile_Enum);
 					if (isEnum)
 					{
 						if (enumFields)
@@ -199,9 +200,9 @@ namespace JetBrainsDecompiler.Main
 				// methods
 				foreach (StructMethod mt in cl.GetMethods())
 				{
-					bool hide = mt.IsSynthetic() && DecompilerContext.GetOption(IIFernflowerPreferences
+					bool hide = mt.IsSynthetic() && DecompilerContext.GetOption(IFernflowerPreferences
 						.Remove_Synthetic) || mt.HasModifier(ICodeConstants.Acc_Bridge) && DecompilerContext
-						.GetOption(IIFernflowerPreferences.Remove_Bridge) || wrapper.GetHiddenMembers().
+						.GetOption(IFernflowerPreferences.Remove_Bridge) || wrapper.GetHiddenMembers().
 						Contains(InterpreterUtil.MakeUniqueKey(mt.GetName(), mt.GetDescriptor()));
 					if (hide)
 					{
@@ -236,7 +237,7 @@ namespace JetBrainsDecompiler.Main
 						StructClass innerCl = inner.classStruct;
 						bool isSynthetic = (inner.access & ICodeConstants.Acc_Synthetic) != 0 || innerCl.
 							IsSynthetic();
-						bool hide = isSynthetic && DecompilerContext.GetOption(IIFernflowerPreferences.Remove_Synthetic
+						bool hide = isSynthetic && DecompilerContext.GetOption(IFernflowerPreferences.Remove_Synthetic
 							) || wrapper.GetHiddenMembers().Contains(innerCl.qualifiedName);
 						if (hide)
 						{
@@ -293,7 +294,7 @@ namespace JetBrainsDecompiler.Main
 			bool isDeprecated = cl.HasAttribute(StructGeneralAttribute.Attribute_Deprecated);
 			bool isSynthetic = (flags & ICodeConstants.Acc_Synthetic) != 0 || cl.HasAttribute
 				(StructGeneralAttribute.Attribute_Synthetic);
-			bool isEnum = DecompilerContext.GetOption(IIFernflowerPreferences.Decompile_Enum)
+			bool isEnum = DecompilerContext.GetOption(IFernflowerPreferences.Decompile_Enum)
 				 && (flags & ICodeConstants.Acc_Enum) != 0;
 			bool isInterface = (flags & ICodeConstants.Acc_Interface) != 0;
 			bool isAnnotation = (flags & ICodeConstants.Acc_Annotation) != 0;
@@ -394,7 +395,7 @@ namespace JetBrainsDecompiler.Main
 			bool isInterface = cl.HasModifier(ICodeConstants.Acc_Interface);
 			bool isDeprecated = fd.HasAttribute(StructGeneralAttribute.Attribute_Deprecated);
 			bool isEnum = fd.HasModifier(ICodeConstants.Acc_Enum) && DecompilerContext.GetOption
-				(IIFernflowerPreferences.Decompile_Enum);
+				(IFernflowerPreferences.Decompile_Enum);
 			if (isDeprecated)
 			{
 				AppendDeprecation(buffer, indent);
@@ -418,7 +419,7 @@ namespace JetBrainsDecompiler.Main
 			}
 			VarType fieldType = new VarType(fd.GetDescriptor(), false);
 			GenericFieldDescriptor descriptor = null;
-			if (DecompilerContext.GetOption(IIFernflowerPreferences.Decompile_Generic_Signatures
+			if (DecompilerContext.GetOption(IFernflowerPreferences.Decompile_Generic_Signatures
 				))
 			{
 				StructGenericSignatureAttribute attr = fd.GetAttribute(StructGeneralAttribute.Attribute_Signature
@@ -528,7 +529,7 @@ namespace JetBrainsDecompiler.Main
 							}
 							string typeName = ExprProcessor.GetCastTypeName(md_content.@params[i].Copy());
 							if (ExprProcessor.Undefined_Type_String.Equals(typeName) && DecompilerContext.GetOption
-								(IIFernflowerPreferences.Undefined_Param_Type_Object))
+								(IFernflowerPreferences.Undefined_Param_Type_Object))
 							{
 								typeName = ExprProcessor.GetCastTypeName(VarType.Vartype_Object);
 							}
@@ -599,8 +600,8 @@ namespace JetBrainsDecompiler.Main
 			for (int i = 0; i < name.Length; i++)
 			{
 				char c = name[i];
-				if ((i == 0 && !char.IsJavaIdentifierStart(c)) || (i > 0 && !char.IsJavaIdentifierPart
-					(c)))
+				if ((i == 0 && !Runtime.IsJavaIdentifierPart(c)) || (i > 0 && !Runtime.IsJavaIdentifierPart
+					                                                     (c)))
 				{
 					changed = true;
 					res.Append("_");
@@ -635,7 +636,7 @@ namespace JetBrainsDecompiler.Main
 				bool isInterface = cl.HasModifier(ICodeConstants.Acc_Interface);
 				bool isAnnotation = cl.HasModifier(ICodeConstants.Acc_Annotation);
 				bool isEnum = cl.HasModifier(ICodeConstants.Acc_Enum) && DecompilerContext.GetOption
-					(IIFernflowerPreferences.Decompile_Enum);
+					(IFernflowerPreferences.Decompile_Enum);
 				bool isDeprecated = mt.HasAttribute(StructGeneralAttribute.Attribute_Deprecated);
 				bool clinit = false;
 				bool init = false;
@@ -702,7 +703,7 @@ namespace JetBrainsDecompiler.Main
 					clinit = true;
 				}
 				GenericMethodDescriptor descriptor = null;
-				if (DecompilerContext.GetOption(IIFernflowerPreferences.Decompile_Generic_Signatures
+				if (DecompilerContext.GetOption(IFernflowerPreferences.Decompile_Generic_Signatures
 					))
 				{
 					StructGenericSignatureAttribute attr = mt.GetAttribute(StructGeneralAttribute.Attribute_Signature
@@ -716,7 +717,7 @@ namespace JetBrainsDecompiler.Main
 							List<VarVersionPair> mask = methodWrapper.synthParameters;
 							if (mask != null)
 							{
-								actualParams = mask.Stream().Filter(Objects).Count();
+								actualParams = mask.Count(c => c == null);
 							}
 							else if (isEnum && init)
 							{
@@ -768,7 +769,7 @@ namespace JetBrainsDecompiler.Main
 						}
 					}
 					List<StructMethodParametersAttribute.Entry> methodParameters = null;
-					if (DecompilerContext.GetOption(IIFernflowerPreferences.Use_Method_Parameters))
+					if (DecompilerContext.GetOption(IFernflowerPreferences.Use_Method_Parameters))
 					{
 						StructMethodParametersAttribute attr = mt.GetAttribute(StructGeneralAttribute.Attribute_Method_Parameters
 							);
@@ -822,7 +823,7 @@ namespace JetBrainsDecompiler.Main
 								typeName = ExprProcessor.GetCastTypeName(parameterType);
 							}
 							if (ExprProcessor.Undefined_Type_String.Equals(typeName) && DecompilerContext.GetOption
-								(IIFernflowerPreferences.Undefined_Param_Type_Object))
+								(IFernflowerPreferences.Undefined_Param_Type_Object))
 							{
 								typeName = ExprProcessor.GetCastTypeName(VarType.Vartype_Object);
 							}
@@ -953,7 +954,7 @@ namespace JetBrainsDecompiler.Main
 		private static bool HideConstructor(ClassesProcessor.ClassNode node, bool init, bool
 			 throwsExceptions, int paramCount, int methodAccessFlags)
 		{
-			if (!init || throwsExceptions || paramCount > 0 || !DecompilerContext.GetOption(IIFernflowerPreferences
+			if (!init || throwsExceptions || paramCount > 0 || !DecompilerContext.GetOption(IFernflowerPreferences
 				.Hide_Default_Constructor))
 			{
 				return false;
@@ -963,7 +964,7 @@ namespace JetBrainsDecompiler.Main
 			int classAccesFlags = node.type == ClassesProcessor.ClassNode.Class_Root ? cl.GetAccessFlags
 				() : node.access;
 			bool isEnum = cl.HasModifier(ICodeConstants.Acc_Enum) && DecompilerContext.GetOption
-				(IIFernflowerPreferences.Decompile_Enum);
+				(IFernflowerPreferences.Decompile_Enum);
 			// default constructor requires same accessibility flags. Exception: enum constructor which is always private
 			if (!isEnum && ((classAccesFlags & Accessibility_Flags) != (methodAccessFlags & Accessibility_Flags
 				)))
@@ -1072,7 +1073,7 @@ namespace JetBrainsDecompiler.Main
 		{
 			string typeText = ExprProcessor.GetCastTypeName(type, false);
 			if (ExprProcessor.Undefined_Type_String.Equals(typeText) && DecompilerContext.GetOption
-				(IIFernflowerPreferences.Undefined_Param_Type_Object))
+				(IFernflowerPreferences.Undefined_Param_Type_Object))
 			{
 				typeText = ExprProcessor.GetCastTypeName(VarType.Vartype_Object, false);
 			}
@@ -1085,16 +1086,16 @@ namespace JetBrainsDecompiler.Main
 				();
 		}
 
-		private static readonly StructGeneralAttribute.Key[] Annotation_Attributes = new 
-			StructGeneralAttribute.Key[] { StructGeneralAttribute.Attribute_Runtime_Visible_Annotations
+		private static readonly StructGeneralAttribute.Key<StructAnnotationAttribute>[] Annotation_Attributes = new 
+			StructGeneralAttribute.Key<StructAnnotationAttribute>[] { StructGeneralAttribute.Attribute_Runtime_Visible_Annotations
 			, StructGeneralAttribute.Attribute_Runtime_Invisible_Annotations };
 
-		private static readonly StructGeneralAttribute.Key[] Parameter_Annotation_Attributes
-			 = new StructGeneralAttribute.Key[] { StructGeneralAttribute.Attribute_Runtime_Visible_Parameter_Annotations
+		private static readonly StructGeneralAttribute.Key<StructAnnotationParameterAttribute>[] Parameter_Annotation_Attributes
+			 = new StructGeneralAttribute.Key<StructAnnotationParameterAttribute>[] { StructGeneralAttribute.Attribute_Runtime_Visible_Parameter_Annotations
 			, StructGeneralAttribute.Attribute_Runtime_Invisible_Parameter_Annotations };
 
-		private static readonly StructGeneralAttribute.Key[] Type_Annotation_Attributes = 
-			new StructGeneralAttribute.Key[] { StructGeneralAttribute.Attribute_Runtime_Visible_Type_Annotations
+		private static readonly StructGeneralAttribute.Key<StructTypeAnnotationAttribute>[] Type_Annotation_Attributes = 
+			new StructGeneralAttribute.Key<StructTypeAnnotationAttribute>[] { StructGeneralAttribute.Attribute_Runtime_Visible_Type_Annotations
 			, StructGeneralAttribute.Attribute_Runtime_Invisible_Type_Annotations };
 
 		private static void AppendAnnotations(TextBuffer buffer, int indent, StructMember
@@ -1178,11 +1179,11 @@ namespace JetBrainsDecompiler.Main
 			}
 		}
 
-		private static readonly IDictionary<int, string> Modifiers;
+		private static readonly Dictionary<int, string> Modifiers;
 
 		static ClassWriter()
 		{
-			Modifiers = new LinkedHashMap<int, string>();
+			Modifiers = new Dictionary<int, string>();
 			Sharpen.Collections.Put(Modifiers, ICodeConstants.Acc_Public, "public");
 			Sharpen.Collections.Put(Modifiers, ICodeConstants.Acc_Protected, "protected");
 			Sharpen.Collections.Put(Modifiers, ICodeConstants.Acc_Private, "private");
@@ -1239,7 +1240,7 @@ namespace JetBrainsDecompiler.Main
 
 		public static GenericClassDescriptor GetGenericClassDescriptor(StructClass cl)
 		{
-			if (DecompilerContext.GetOption(IIFernflowerPreferences.Decompile_Generic_Signatures
+			if (DecompilerContext.GetOption(IFernflowerPreferences.Decompile_Generic_Signatures
 				))
 			{
 				StructGenericSignatureAttribute attr = cl.GetAttribute(StructGeneralAttribute.Attribute_Signature

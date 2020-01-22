@@ -1,5 +1,6 @@
 // Copyright 2000-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System.Collections.Generic;
+using System.IO;
 using Java.Util;
 using JetBrainsDecompiler.Code;
 using JetBrainsDecompiler.Main;
@@ -8,6 +9,8 @@ using JetBrainsDecompiler.Struct.Attr;
 using JetBrainsDecompiler.Struct.Consts;
 using JetBrainsDecompiler.Struct.Gen;
 using JetBrainsDecompiler.Util;
+using NFernflower.Java.Util;
+using ObjectWeb.Misc.Java.Util;
 using Sharpen;
 
 namespace JetBrainsDecompiler.Main.Rels
@@ -20,7 +23,7 @@ namespace JetBrainsDecompiler.Main.Rels
 
 		private const string Javac_Lambda_Alt_Method = "altMetafactory";
 
-		/// <exception cref="System.IO.IOException"/>
+		/// <exception cref="IOException"/>
 		public virtual void ProcessClass(ClassesProcessor.ClassNode node)
 		{
 			foreach (ClassesProcessor.ClassNode child in node.nested)
@@ -60,7 +63,7 @@ namespace JetBrainsDecompiler.Main.Rels
 				return;
 			}
 			// no lambda bootstrap constant found
-			IDictionary<string, string> mapMethodsLambda = new Dictionary<string, string>();
+			Dictionary<string, string> mapMethodsLambda = new Dictionary<string, string>();
 			// iterate over code and find invocations of bootstrap methods. Replace them with anonymous classes.
 			foreach (StructMethod mt in cl.GetMethods())
 			{

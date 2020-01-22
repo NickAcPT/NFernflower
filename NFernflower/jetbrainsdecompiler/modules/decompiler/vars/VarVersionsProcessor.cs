@@ -17,7 +17,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 	{
 		private readonly StructMethod method;
 
-		private IDictionary<int, int> mapOriginalVarIndices = new System.Collections.Generic.Dictionary<
+		private Dictionary<int, int> mapOriginalVarIndices = new System.Collections.Generic.Dictionary<
 			int, int>();
 
 		private readonly VarTypeProcessor typeProcessor;
@@ -48,7 +48,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 		{
 			// collect phi versions
 			List<HashSet<VarVersionPair>> lst = new List<HashSet<VarVersionPair>>();
-			foreach (KeyValuePair<VarVersionPair, FastSparseSetFactory.FastSparseSet<int>> ent
+			foreach (KeyValuePair<VarVersionPair, FastSparseSetFactory<int>.FastSparseSet<int>> ent
 				 in ssa.GetPhi())
 			{
 				HashSet<VarVersionPair> set = new HashSet<VarVersionPair>();
@@ -61,7 +61,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 				{
 					HashSet<VarVersionPair> tset = lst[i];
 					HashSet<VarVersionPair> intersection = new HashSet<VarVersionPair>(set);
-					intersection.RetainAll(tset);
+					intersection.IntersectWith(tset);
 					if (!(intersection.Count == 0))
 					{
 						Sharpen.Collections.AddAll(set, tset);
@@ -70,7 +70,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 				}
 				lst.Add(set);
 			}
-			IDictionary<VarVersionPair, int> phiVersions = new Dictionary<VarVersionPair, int
+			Dictionary<VarVersionPair, int> phiVersions = new Dictionary<VarVersionPair, int
 				>();
 			foreach (HashSet<VarVersionPair> set in lst)
 			{
@@ -91,34 +91,34 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 			UpdateVersions(graph, phiVersions);
 		}
 
-		private static void UpdateVersions(DirectGraph graph, IDictionary<VarVersionPair, 
+		private static void UpdateVersions(DirectGraph graph, Dictionary<VarVersionPair, 
 			int> versions)
 		{
 			graph.IterateExprents((Exprent exprent) => 			{
-				List<Exprent> lst = exprent.GetAllExprents(true);
-				lst.Add(exprent);
-				foreach (Exprent expr in lst)
-				{
-					if (expr.type == Exprent.Exprent_Var)
+					List<Exprent> lst = exprent.GetAllExprents(true);
+					lst.Add(exprent);
+					foreach (Exprent expr in lst)
 					{
-						VarExprent var = (VarExprent)expr;
-						int? version = versions.GetOrNullable(new VarVersionPair(var));
-						if (version != null)
+						if (expr.type == Exprent.Exprent_Var)
 						{
-							var.SetVersion(version.Value);
+							VarExprent var = (VarExprent)expr;
+							int? version = versions.GetOrNullable(new VarVersionPair(var));
+							if (version != null)
+							{
+								var.SetVersion(version.Value);
+							}
 						}
 					}
+					return 0;
 				}
-				return 0;
-			}
 );
 		}
 
 		private static void EliminateNonJavaTypes(VarTypeProcessor typeProcessor)
 		{
-			IDictionary<VarVersionPair, VarType> mapExprentMaxTypes = typeProcessor.GetMapExprentMaxTypes
+			Dictionary<VarVersionPair, VarType> mapExprentMaxTypes = typeProcessor.GetMapExprentMaxTypes
 				();
-			IDictionary<VarVersionPair, VarType> mapExprentMinTypes = typeProcessor.GetMapExprentMinTypes
+			Dictionary<VarVersionPair, VarType> mapExprentMinTypes = typeProcessor.GetMapExprentMinTypes
 				();
 			foreach (VarVersionPair paar in new List<VarVersionPair>(mapExprentMinTypes.Keys))
 			{
@@ -149,11 +149,11 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 		private static void SimpleMerge(VarTypeProcessor typeProcessor, DirectGraph graph
 			, StructMethod mt)
 		{
-			IDictionary<VarVersionPair, VarType> mapExprentMaxTypes = typeProcessor.GetMapExprentMaxTypes
+			Dictionary<VarVersionPair, VarType> mapExprentMaxTypes = typeProcessor.GetMapExprentMaxTypes
 				();
-			IDictionary<VarVersionPair, VarType> mapExprentMinTypes = typeProcessor.GetMapExprentMinTypes
+			Dictionary<VarVersionPair, VarType> mapExprentMinTypes = typeProcessor.GetMapExprentMinTypes
 				();
-			IDictionary<int, HashSet<int>> mapVarVersions = new Dictionary<int, HashSet<int>>
+			Dictionary<int, HashSet<int>> mapVarVersions = new Dictionary<int, HashSet<int>>
 				();
 			foreach (VarVersionPair pair in mapExprentMinTypes.Keys)
 			{
@@ -165,7 +165,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 				}
 			}
 			bool is_method_static = mt.HasModifier(ICodeConstants.Acc_Static);
-			IDictionary<VarVersionPair, int> mapMergedVersions = new Dictionary<VarVersionPair
+			Dictionary<VarVersionPair, int> mapMergedVersions = new Dictionary<VarVersionPair
 				, int>();
 			foreach (KeyValuePair<int, HashSet<int>> ent in mapVarVersions)
 			{
@@ -222,15 +222,15 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 		private void SetNewVarIndices(VarTypeProcessor typeProcessor, DirectGraph graph, 
 			VarVersionsProcessor previousVersionsProcessor)
 		{
-			IDictionary<VarVersionPair, VarType> mapExprentMaxTypes = typeProcessor.GetMapExprentMaxTypes
+			Dictionary<VarVersionPair, VarType> mapExprentMaxTypes = typeProcessor.GetMapExprentMaxTypes
 				();
-			IDictionary<VarVersionPair, VarType> mapExprentMinTypes = typeProcessor.GetMapExprentMinTypes
+			Dictionary<VarVersionPair, VarType> mapExprentMinTypes = typeProcessor.GetMapExprentMinTypes
 				();
-			IDictionary<VarVersionPair, int> mapFinalVars = typeProcessor.GetMapFinalVars();
+			Dictionary<VarVersionPair, int> mapFinalVars = typeProcessor.GetMapFinalVars();
 			CounterContainer counters = DecompilerContext.GetCounterContainer();
-			IDictionary<VarVersionPair, int> mapVarPaar = new Dictionary<VarVersionPair, int>
+			Dictionary<VarVersionPair, int> mapVarPaar = new Dictionary<VarVersionPair, int>
 				();
-			IDictionary<int, int> mapOriginalVarIndices = new Dictionary<int, int>();
+			Dictionary<int, int> mapOriginalVarIndices = new Dictionary<int, int>();
 			// map var-version pairs on new var indexes
 			foreach (VarVersionPair pair in new List<VarVersionPair>(mapExprentMinTypes.Keys))
 			{
@@ -254,35 +254,35 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 			}
 			// set new vars
 			graph.IterateExprents((Exprent exprent) => 			{
-				List<Exprent> lst = exprent.GetAllExprents(true);
-				lst.Add(exprent);
-				foreach (Exprent expr in lst)
-				{
-					if (expr.type == Exprent.Exprent_Var)
+					List<Exprent> lst = exprent.GetAllExprents(true);
+					lst.Add(exprent);
+					foreach (Exprent expr in lst)
 					{
-						VarExprent newVar = (VarExprent)expr;
-						int? newVarIndex = mapVarPaar.GetOrNullable(new VarVersionPair(newVar));
-						if (newVarIndex != null)
+						if (expr.type == Exprent.Exprent_Var)
 						{
-							newVar.SetIndex(newVarIndex.Value);
-							newVar.SetVersion(0);
+							VarExprent newVar = (VarExprent)expr;
+							int? newVarIndex = mapVarPaar.GetOrNullable(new VarVersionPair(newVar));
+							if (newVarIndex != null)
+							{
+								newVar.SetIndex(newVarIndex.Value);
+								newVar.SetVersion(0);
+							}
+						}
+						else if (expr.type == Exprent.Exprent_Const)
+						{
+							VarType maxType = mapExprentMaxTypes.GetOrNull(new VarVersionPair(expr.id, -1));
+							if (maxType != null && maxType.Equals(VarType.Vartype_Char))
+							{
+								((ConstExprent)expr).SetConstType(maxType);
+							}
 						}
 					}
-					else if (expr.type == Exprent.Exprent_Const)
-					{
-						VarType maxType = mapExprentMaxTypes.GetOrNull(new VarVersionPair(expr.id, -1));
-						if (maxType != null && maxType.Equals(VarType.Vartype_Char))
-						{
-							((ConstExprent)expr).SetConstType(maxType);
-						}
-					}
+					return 0;
 				}
-				return 0;
-			}
 );
 			if (previousVersionsProcessor != null)
 			{
-				IDictionary<int, int> oldIndices = previousVersionsProcessor.GetMapOriginalVarIndices
+				Dictionary<int, int> oldIndices = previousVersionsProcessor.GetMapOriginalVarIndices
 					();
 				this.mapOriginalVarIndices = new Dictionary<int, int>(mapOriginalVarIndices.Count
 					);
@@ -321,7 +321,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 			Sharpen.Collections.Put(typeProcessor.GetMapFinalVars(), pair, finalType);
 		}
 
-		public virtual IDictionary<int, int> GetMapOriginalVarIndices()
+		public virtual Dictionary<int, int> GetMapOriginalVarIndices()
 		{
 			return mapOriginalVarIndices;
 		}

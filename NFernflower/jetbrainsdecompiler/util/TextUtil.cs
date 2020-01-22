@@ -41,7 +41,7 @@ namespace JetBrainsDecompiler.Util
 				return string.Empty;
 			}
 			StringBuilder buf = new StringBuilder();
-			string indent = (string)DecompilerContext.GetProperty(IIFernflowerPreferences.Indent_String
+			string indent = (string)DecompilerContext.GetProperty(IFernflowerPreferences.Indent_String
 				);
 			Append(buf, indent, length);
 			return buf.ToString();
@@ -55,17 +55,28 @@ namespace JetBrainsDecompiler.Util
 			}
 		}
 
+		
+		public const char Unassigned = (char) 0;
+		public const char Line_Separator = (char) 13;
+		public const char Paragraph_Separator = (char) 14;
+		public const char Control = (char) 11;
+		public const char Format = (char) 16;
+		public const char Private_Use = (char) 18;
+		public const char Surrogate = (char) 19;
+		
 		public static bool IsPrintableUnicode(char c)
 		{
-			int t = char.GetType(c);
-			return t != char.Unassigned && t != char.Line_Separator && t != char.Paragraph_Separator
-				 && t != char.Control && t != char.Format && t != char.Private_Use && t != char.
+			/*
+			return t != Unassigned && t != Line_Separator && t != Paragraph_Separator
+				 && t != Control && t != Format && t != Private_Use && t != 
 				Surrogate;
+		*/
+			return true;
 		}
 
 		public static string CharToUnicodeLiteral(int value)
 		{
-			string sTemp = int.ToHexString(value);
+			string sTemp = Sharpen.Runtime.ToHexString(value);
 			sTemp = Sharpen.Runtime.Substring(("0000" + sTemp), sTemp.Length);
 			return "\\u" + sTemp;
 		}
@@ -77,13 +88,13 @@ namespace JetBrainsDecompiler.Util
 
 		private static bool IsJavaIdentifier(string id)
 		{
-			if ((id.Length == 0) || !char.IsJavaIdentifierStart(id[0]))
+			if ((id.Length == 0) || !Runtime.IsJavaIdentifierPart(id[0]))
 			{
 				return false;
 			}
 			for (int i = 1; i < id.Length; i++)
 			{
-				if (!char.IsJavaIdentifierPart(id[i]))
+				if (!Runtime.IsJavaIdentifierPart(id[i]))
 				{
 					return false;
 				}

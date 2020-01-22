@@ -10,10 +10,10 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 	{
 		private readonly IIGraph graph;
 
-		private readonly VBStyleCollection<IIGraphNode, IIGraphNode> colOrderedIDoms = new 
-			VBStyleCollection<IIGraphNode, IIGraphNode>();
+		private readonly VBStyleCollection<IGraphNode, IGraphNode> colOrderedIDoms = new 
+			VBStyleCollection<IGraphNode, IGraphNode>();
 
-		private HashSet<IIGraphNode> setRoots;
+		private HashSet<IGraphNode> setRoots;
 
 		public GenericDominatorEngine(IIGraph graph)
 		{
@@ -34,10 +34,10 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 			}
 		}
 
-		private static IIGraphNode GetCommonIDom(IIGraphNode node1, IIGraphNode node2, VBStyleCollection
-			<IIGraphNode, IIGraphNode> orderedIDoms)
+		private static IGraphNode GetCommonIDom(IGraphNode node1, IGraphNode node2, VBStyleCollection
+			<IGraphNode, IGraphNode> orderedIDoms)
 		{
-			IIGraphNode nodeOld;
+			IGraphNode nodeOld;
 			if (node1 == null)
 			{
 				return node2;
@@ -79,13 +79,13 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 		private void CalcIDoms()
 		{
 			OrderNodes();
-			List<IIGraphNode> lstNodes = colOrderedIDoms.GetLstKeys();
+			List<IGraphNode> lstNodes = colOrderedIDoms.GetLstKeys();
 			while (true)
 			{
 				bool changed = false;
-				foreach (IIGraphNode node in lstNodes)
+				foreach (IGraphNode node in lstNodes)
 				{
-					IIGraphNode idom = null;
+					IGraphNode idom = null;
 					if (!setRoots.Contains(node))
 					{
 						foreach (var pred in node.GetPredecessors())
@@ -105,7 +105,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 					{
 						idom = node;
 					}
-					IIGraphNode oldidom = colOrderedIDoms.PutWithKey(idom, node);
+					IGraphNode oldidom = colOrderedIDoms.PutWithKey(idom, node);
 					if (!idom.Equals(oldidom))
 					{
 						// oldidom is null iff the node is touched for the first time
@@ -119,11 +119,11 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 			}
 		}
 
-		public virtual bool IsDominator(IIGraphNode node, IIGraphNode dom)
+		public virtual bool IsDominator(IGraphNode node, IGraphNode dom)
 		{
 			while (!node.Equals(dom))
 			{
-				IIGraphNode idom = colOrderedIDoms.GetWithKey(node);
+				IGraphNode idom = colOrderedIDoms.GetWithKey(node);
 				if (idom == node)
 				{
 					return false;

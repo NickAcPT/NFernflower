@@ -18,24 +18,23 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			, FunctionExprent.Function_Le, FunctionExprent.Function_Gt, FunctionExprent.Function_Cor
 			, FunctionExprent.Function_Cadd };
 
-		private static readonly Dictionary<int, int[]> mapNumComparisons = new Dictionary
-			<int, int[]>();
+		private static readonly Dictionary<int?, int?[]> mapNumComparisons = new Dictionary<int?, int?[]>();
 
 		static SecondaryFunctionsHelper()
 		{
-			Sharpen.Collections.Put(mapNumComparisons, FunctionExprent.Function_Eq, new int[]
+			Sharpen.Collections.Put(mapNumComparisons, FunctionExprent.Function_Eq, new int?[]
 				 { FunctionExprent.Function_Lt, FunctionExprent.Function_Eq, FunctionExprent.Function_Gt
 				 });
-			Sharpen.Collections.Put(mapNumComparisons, FunctionExprent.Function_Ne, new int[]
+			Sharpen.Collections.Put(mapNumComparisons, FunctionExprent.Function_Ne, new int?[]
 				 { FunctionExprent.Function_Ge, FunctionExprent.Function_Ne, FunctionExprent.Function_Le
 				 });
-			Sharpen.Collections.Put(mapNumComparisons, FunctionExprent.Function_Gt, new int[]
+			Sharpen.Collections.Put(mapNumComparisons, FunctionExprent.Function_Gt, new int?[]
 				 { FunctionExprent.Function_Ge, FunctionExprent.Function_Gt, null });
-			Sharpen.Collections.Put(mapNumComparisons, FunctionExprent.Function_Ge, new int[]
+			Sharpen.Collections.Put(mapNumComparisons, FunctionExprent.Function_Ge, new int?[]
 				 { null, FunctionExprent.Function_Ge, FunctionExprent.Function_Gt });
-			Sharpen.Collections.Put(mapNumComparisons, FunctionExprent.Function_Lt, new int[]
+			Sharpen.Collections.Put(mapNumComparisons, FunctionExprent.Function_Lt, new int?[]
 				 { null, FunctionExprent.Function_Lt, FunctionExprent.Function_Le });
-			Sharpen.Collections.Put(mapNumComparisons, FunctionExprent.Function_Le, new int[]
+			Sharpen.Collections.Put(mapNumComparisons, FunctionExprent.Function_Le, new int?[]
 				 { FunctionExprent.Function_Lt, FunctionExprent.Function_Le, null });
 		}
 
@@ -85,7 +84,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			while (replaced)
 			{
 				replaced = false;
-				List<object> lstObjects = new List<object>(stat.GetExprents() == null ? stat.GetSequentialObjects
+				List<object> lstObjects = new List<object>(stat.GetExprents() == null ? (IEnumerable<object>) stat.GetSequentialObjects
 					() : stat.GetExprents());
 				for (int i = 0; i < lstObjects.Count; i++)
 				{
@@ -163,16 +162,16 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 								 || functype == FunctionExprent.Function_Dcmpl)
 							{
 								int desttype = -1;
-								int[] destcons = mapNumComparisons.GetOrNull(fexpr.GetFuncType());
+								int?[] destcons = mapNumComparisons.GetOrNull(fexpr.GetFuncType());
 								if (destcons != null)
 								{
 									int index = cexpr.GetIntValue() + 1;
 									if (index >= 0 && index <= 2)
 									{
-										int destcon = destcons[index];
+										int? destcon = destcons[index];
 										if (destcon != null)
 										{
-											desttype = destcon;
+											desttype = destcon.Value;
 										}
 									}
 								}
@@ -321,17 +320,17 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 							int var = DecompilerContext.GetCounterContainer().GetCounterAndIncrement(CounterContainer
 								.Var_Counter);
 							VarType type = lstOperands[0].GetExprType();
-							FunctionExprent iff = new FunctionExprent(FunctionExprent.Function_Iif, Sharpen.Arrays.AsList
-								(new FunctionExprent(FunctionExprent.Function_Lt, Sharpen.Arrays.AsList(new VarExprent
+							FunctionExprent iff = new FunctionExprent(FunctionExprent.Function_Iif, Sharpen.Arrays.AsList<Exprent>
+								(new FunctionExprent(FunctionExprent.Function_Lt, Sharpen.Arrays.AsList<Exprent>(new VarExprent
 								(var, type, varProc), ConstExprent.GetZeroConstant(type.type)), null), new ConstExprent
 								(VarType.Vartype_Int, -1, null), new ConstExprent(VarType.Vartype_Int, 1, null))
 								, null);
-							FunctionExprent head = new FunctionExprent(FunctionExprent.Function_Eq, Sharpen.Arrays.AsList
+							FunctionExprent head = new FunctionExprent(FunctionExprent.Function_Eq, Sharpen.Arrays.AsList<Exprent>
 								(new AssignmentExprent(new VarExprent(var, type, varProc), new FunctionExprent(FunctionExprent
 								.Function_Sub, Sharpen.Arrays.AsList(lstOperands[0], lstOperands[1]), null), null
 								), ConstExprent.GetZeroConstant(type.type)), null);
 							varProc.SetVarType(new VarVersionPair(var, 0), type);
-							return new FunctionExprent(FunctionExprent.Function_Iif, Sharpen.Arrays.AsList(head
+							return new FunctionExprent(FunctionExprent.Function_Iif, Sharpen.Arrays.AsList<Exprent>(head
 								, new ConstExprent(VarType.Vartype_Int, 0, null), iff), fexpr_1.bytecode);
 						}
 					}

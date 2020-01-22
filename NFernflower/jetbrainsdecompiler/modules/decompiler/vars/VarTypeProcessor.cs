@@ -23,13 +23,13 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 
 		private readonly MethodDescriptor methodDescriptor;
 
-		private readonly IDictionary<VarVersionPair, VarType> mapExprentMinTypes = new Dictionary
+		private readonly Dictionary<VarVersionPair, VarType> mapExprentMinTypes = new Dictionary
 			<VarVersionPair, VarType>();
 
-		private readonly IDictionary<VarVersionPair, VarType> mapExprentMaxTypes = new Dictionary
+		private readonly Dictionary<VarVersionPair, VarType> mapExprentMaxTypes = new Dictionary
 			<VarVersionPair, VarType>();
 
-		private readonly IDictionary<VarVersionPair, int> mapFinalVars = new Dictionary<VarVersionPair
+		private readonly Dictionary<VarVersionPair, int> mapFinalVars = new Dictionary<VarVersionPair
 			, int>();
 
 		public VarTypeProcessor(StructMethod mt, MethodDescriptor md)
@@ -71,7 +71,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 			}
 			// catch variables
 			LinkedList<Statement> stack = new LinkedList<Statement>();
-			stack.Add(root);
+			stack.AddLast(root);
 			while (!(stack.Count == 0))
 			{
 				Statement stat = Sharpen.Collections.RemoveFirst(stack);
@@ -101,26 +101,26 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 		private static void ResetExprentTypes(DirectGraph graph)
 		{
 			graph.IterateExprents((Exprent exprent) => 			{
-				List<Exprent> lst = exprent.GetAllExprents(true);
-				lst.Add(exprent);
-				foreach (Exprent expr in lst)
-				{
-					if (expr.type == Exprent.Exprent_Var)
+					List<Exprent> lst = exprent.GetAllExprents(true);
+					lst.Add(exprent);
+					foreach (Exprent expr in lst)
 					{
-						((VarExprent)expr).SetVarType(VarType.Vartype_Unknown);
-					}
-					else if (expr.type == Exprent.Exprent_Const)
-					{
-						ConstExprent constExpr = (ConstExprent)expr;
-						if (constExpr.GetConstType().typeFamily == ICodeConstants.Type_Family_Integer)
+						if (expr.type == Exprent.Exprent_Var)
 						{
-							constExpr.SetConstType(new ConstExprent(constExpr.GetIntValue(), constExpr.IsBoolPermitted
-								(), null).GetConstType());
+							((VarExprent)expr).SetVarType(VarType.Vartype_Unknown);
+						}
+						else if (expr.type == Exprent.Exprent_Const)
+						{
+							ConstExprent constExpr = (ConstExprent)expr;
+							if (constExpr.GetConstType().typeFamily == ICodeConstants.Type_Family_Integer)
+							{
+								constExpr.SetConstType(new ConstExprent(constExpr.GetIntValue(), constExpr.IsBoolPermitted
+									(), null).GetConstType());
+							}
 						}
 					}
+					return 0;
 				}
-				return 0;
-			}
 );
 		}
 
@@ -292,17 +292,17 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 			return res;
 		}
 
-		public virtual IDictionary<VarVersionPair, VarType> GetMapExprentMaxTypes()
+		public virtual Dictionary<VarVersionPair, VarType> GetMapExprentMaxTypes()
 		{
 			return mapExprentMaxTypes;
 		}
 
-		public virtual IDictionary<VarVersionPair, VarType> GetMapExprentMinTypes()
+		public virtual Dictionary<VarVersionPair, VarType> GetMapExprentMinTypes()
 		{
 			return mapExprentMinTypes;
 		}
 
-		public virtual IDictionary<VarVersionPair, int> GetMapFinalVars()
+		public virtual Dictionary<VarVersionPair, int> GetMapFinalVars()
 		{
 			return mapFinalVars;
 		}

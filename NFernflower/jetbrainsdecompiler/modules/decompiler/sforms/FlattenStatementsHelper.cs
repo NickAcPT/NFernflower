@@ -1,5 +1,6 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System.Collections.Generic;
+using System.Linq;
 using JetBrainsDecompiler.Modules.Decompiler;
 using JetBrainsDecompiler.Modules.Decompiler.Exps;
 using JetBrainsDecompiler.Modules.Decompiler.Stats;
@@ -9,19 +10,19 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 {
 	public class FlattenStatementsHelper
 	{
-		private readonly IDictionary<int, string[]> mapDestinationNodes = new Dictionary<
+		private readonly Dictionary<int, string[]> mapDestinationNodes = new Dictionary<
 			int, string[]>();
 
 		private readonly List<FlattenStatementsHelper.Edge> listEdges = new List<FlattenStatementsHelper.Edge
 			>();
 
-		private readonly IDictionary<string, List<string[]>> mapShortRangeFinallyPathIds
+		private readonly Dictionary<string, List<string[]>> mapShortRangeFinallyPathIds
 			 = new Dictionary<string, List<string[]>>();
 
-		private readonly IDictionary<string, List<string[]>> mapLongRangeFinallyPathIds = 
+		private readonly Dictionary<string, List<string[]>> mapLongRangeFinallyPathIds = 
 			new Dictionary<string, List<string[]>>();
 
-		private readonly IDictionary<string, int> mapPosIfBranch = new Dictionary<string, 
+		private readonly Dictionary<string, int> mapPosIfBranch = new Dictionary<string, 
 			int>();
 
 		private DirectGraph graph;
@@ -55,7 +56,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 		private void FlattenStatement()
 		{
 			LinkedList<_T2081736913> lstStackStatements = new LinkedList<_T2081736913>();
-			lstStackStatements.Add(new _T2081736913(this, root, new LinkedList<FlattenStatementsHelper.StackEntry
+			lstStackStatements.AddLast(new _T2081736913(this, root, new LinkedList<FlattenStatementsHelper.StackEntry
 				>(), null));
 			while (!(lstStackStatements.Count == 0))
 			{
@@ -124,18 +125,18 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 									if (st == stat.GetFirst())
 									{
 										// catch head
-										stack.Add(new FlattenStatementsHelper.StackEntry((CatchAllStatement)stat, false));
+										stack.AddLast(new FlattenStatementsHelper.StackEntry((CatchAllStatement)stat, false));
 									}
 									else
 									{
 										// handler
-										stack.Add(new FlattenStatementsHelper.StackEntry((CatchAllStatement)stat, true, StatEdge
+										stack.AddLast(new FlattenStatementsHelper.StackEntry((CatchAllStatement)stat, true, StatEdge
 											.Type_Break, root.GetDummyExit(), st, st, firstnd, firstnd, true));
 									}
 								}
-								lst.Add(new _T2081736913(this, st, stack, null));
+								lst.AddLast(new _T2081736913(this, st, stack, null));
 							}
-							lstStackStatements.AddAll(0, lst);
+							lstStackStatements = new LinkedList<_T2081736913>(lst.Concat(lstStackStatements));
 							break;
 						}
 
@@ -332,7 +333,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 							FlattenStatementsHelper.StackEntry entry = null;
 							if (!(stack.Count == 0))
 							{
-								entry = stack.GetLast();
+								entry = stack.Last();
 							}
 							bool created = true;
 							if (entry == null)
@@ -379,7 +380,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 										finallyShortRangeSource : null, finallyLongRangeSource, finallyShortRangeEntry, 
 										finallyLongRangeEntry, isFinallyMonitorExceptionPath);
 									Sharpen.Collections.RemoveLast(stack);
-									stack.Add(new FlattenStatementsHelper.StackEntry(catchall, true, edgetype, destination
+									stack.AddLast(new FlattenStatementsHelper.StackEntry(catchall, true, edgetype, destination
 										, catchall.GetHandler(), finallyLongRangeEntry == null ? catchall.GetHandler() : 
 										finallyLongRangeEntry, sourcenode, finallyLongRangeSource, false));
 									statEntry.edgeIndex = edgeindex + 1;
@@ -513,7 +514,7 @@ mainloop_break: ;
 			}
 		}
 
-		public virtual IDictionary<int, string[]> GetMapDestinationNodes()
+		public virtual Dictionary<int, string[]> GetMapDestinationNodes()
 		{
 			return mapDestinationNodes;
 		}
@@ -526,7 +527,7 @@ mainloop_break: ;
 
 			public readonly string entry;
 
-			private FinallyPathWrapper(string source, string destination, string entry)
+			internal FinallyPathWrapper(string source, string destination, string entry)
 			{
 				this.source = source;
 				this.destination = destination;
@@ -560,7 +561,7 @@ mainloop_break: ;
 			}
 		}
 
-		private class StackEntry
+		internal class StackEntry
 		{
 			public readonly CatchAllStatement catchstatement;
 

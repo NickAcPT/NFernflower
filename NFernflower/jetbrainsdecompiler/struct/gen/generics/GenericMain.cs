@@ -97,8 +97,8 @@ namespace JetBrainsDecompiler.Struct.Gen.Generics
 			}
 		}
 
-		private static string ParseFormalParameters<_T0, _T0>(string signature, List<_T0
-			> parameters, List<_T0> bounds)
+		private static string ParseFormalParameters(string signature, List<string
+			> parameters, List<List<GenericType>> bounds)
 		{
 			if (signature[0] != '<')
 			{

@@ -12,15 +12,9 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 
 		private int hashCode__ = -1;
 
-		public VarVersionPair(int var, int version)
+		public VarVersionPair(int? var, int version)
 		{
-			this.var = var;
-			this.version = version;
-		}
-
-		public VarVersionPair(int var, int version)
-		{
-			this.var = var;
+			this.var = var ?? 0;
 			this.version = version;
 		}
 

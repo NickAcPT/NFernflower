@@ -1,15 +1,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
+using JetBrainsDecompiler.Code.Cfg;
 
 namespace Sharpen {
     public abstract class EnumBase : IComparable<EnumBase>, IComparable {
 
-        private static readonly Dictionary<Type, EnumBase[]> VALUES_MAP = new Dictionary<Type, EnumBase[]>();
+        private static readonly Dictionary<Type, EnumBase[]> ValuesMap = new Dictionary<Type, EnumBase[]>();
 
         private readonly int _ordinal;
         private readonly string _name;
@@ -40,22 +43,23 @@ namespace Sharpen {
         }
 
         public static bool IsEnum(Type t) {
-            return VALUES_MAP.ContainsKey(t);
+            return ValuesMap.ContainsKey(t);
         }
 
         protected static void RegisterValues<T>(EnumBase[] values) where T : EnumBase {
-            VALUES_MAP[typeof(T)] = values;
+            ValuesMap[typeof(T)] = values;
         }
 
         public static EnumBase[] GetEnumValues(Type enumType) {
             EnumBase[] result;
-            if (VALUES_MAP.TryGetValue(enumType, out result)) {
+            if (ValuesMap.TryGetValue(enumType, out result)) {
                 return result;
             } else {
                 RuntimeHelpers.RunClassConstructor(enumType.TypeHandle);
-                return VALUES_MAP[enumType];
+                return ValuesMap[enumType];
             }
         }
+        
 
         public static T FindByName<T>(string name) where T : EnumBase {
             return name == null ? null : (T) GetEnumValues(typeof(T)).FirstOrDefault(val => val.name() == name);
@@ -72,7 +76,7 @@ namespace Sharpen {
 
     public class System {
 
-        public static readonly DateTime EPOCH = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        public static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         public static int Compare(int x, int y) {
             return (x < y) ? -1 : ((x == y) ? 0 : 1);
@@ -83,7 +87,7 @@ namespace Sharpen {
         }
 
         public static long CurrentTimeMillis() {
-            return (long) (DateTime.UtcNow - EPOCH).TotalMilliseconds;
+            return (long) (DateTime.UtcNow - Epoch).TotalMilliseconds;
         }
 
         public static int FloorDiv(int x, int y) {
@@ -165,28 +169,46 @@ namespace Sharpen {
 
     public static class Collections {
 
+        public static void PutIfAbsent<TK, TV>(this Dictionary<TK, TV> map, TK key, TV value)
+        {
+            if (!map.ContainsKey(key))
+                map.Add(key, value);
+        }
+        
+        public static TV ComputeIfAbsent<TK, TV>(this Dictionary<TK, TV> map, TK key, Func<TK, TV> value)
+        {
+            if (!map.ContainsKey(key))
+            {
+                var newValue = value(key);
+                map.Add(key, newValue);
+                return newValue;
+            }
+
+            return map[key];
+        }
+        
         public static object Put(IDictionary map, object key, object value) {
             object result = map.Contains(key) ? map[key] : null;
             map[key] = value;
             return result;
         }
 
-        public static V Put<K, V>(IDictionary<K, V> map, K key, V value) {
-            V result;
+        public static TV Put<TK, TV>(IDictionary<TK, TV> map, TK key, TV value) {
+            TV result;
             if (!map.TryGetValue(key, out result)) {
-                result = default(V);
+                result = default(TV);
             }
             map[key] = value;
             return result;
         }
 
-        public static V Remove<K, V>(IDictionary<K, V> map, K key) {
-            V result;
+        public static TV Remove<TK, TV>(IDictionary<TK, TV> map, TK key) {
+            TV result;
             if (map.TryGetValue(key, out result)) {
                 map.Remove(key);
                 return result;
             }
-            return default(V);
+            return default(TV);
         }
 
         public static T RemoveFirst<T>(LinkedList<T> linkedList) {
@@ -201,8 +223,8 @@ namespace Sharpen {
             return result;
         }
 
-        public static void PutAll<CK, CV, IK, IV>(IDictionary<CK, CV> collection, IDictionary<IK, IV> items)
-            where IK : CK where IV : CV {
+        public static void PutAll<TCk, TCv, TIk, TIv>(IDictionary<TCk, TCv> collection, IDictionary<TIk, TIv> items)
+            where TIk : TCk where TIv : TCv {
             foreach (var e in items) {
                 collection[e.Key] = e.Value;
             }
@@ -230,6 +252,21 @@ namespace Sharpen {
 
     public static class Runtime {
 
+        public static byte[] ReadFully(this Stream stream)
+        {
+            using var memoryStream = new MemoryStream();
+            stream.CopyTo(memoryStream);
+            return memoryStream.ToArray();
+        }
+        
+        public static void RemoveIf<TK, TV>(this Dictionary<TK, TV> source, Func<KeyValuePair<TK, TV>, bool> predicate)
+        {
+            foreach (var keyValuePair in source.Where(predicate))
+            {
+                source.Remove(keyValuePair.Key);
+            }
+        }
+        
         public static bool IsAssignableFrom(Type baseType, Type type) {
             if (baseType.IsAssignableFrom(type)) {
                 return true;
@@ -250,7 +287,11 @@ namespace Sharpen {
             return o.GetType().IsGenericType && o.GetType().GetGenericTypeDefinition().IsAssignableFrom(type);
         }
 
-        public static string substring(string s, int from, int to) {
+        public static string Substring(string s, int from) {
+            return Substring(s, from, s.Length);
+        }
+        
+        public static string Substring(string s, int from, int to) {
             return s.Substring(from, to - from);
         }
 
@@ -277,11 +318,170 @@ namespace Sharpen {
             return null;
         }
 
+        public static string ToHexString(int p0)
+        {
+            return p0.ToString("x8").ToUpper();
+        }
+        
+
+        public static float IntBitsToFloat(int readInt)
+        {
+            var bytes = BitConverter.GetBytes(readInt);
+            return BitConverter.ToSingle(bytes, 0);
+        }
+
+        public static double LongBitsToDouble(long l)
+        {
+            return BitConverter.Int64BitsToDouble(l);
+        }
+
+        public static int FloatToIntBits(in float f)
+        {
+            return BitConverter.SingleToInt32Bits(f);
+        }
+
+        public static int FloatToRawIntBits(in float value)
+        {
+            var bytes = BitConverter.GetBytes(value);
+            return BitConverter.ToInt32(bytes, 0);
+        }
+
+        public static long DoubleToRawLongBits(in double value)
+        {
+            return BitConverter.DoubleToInt64Bits(value);
+        }
+
+        public static List<Type> GetParameterTypes(this ConstructorInfo info)
+        {
+            return info.GetParameters().Select(c => c.ParameterType).ToList();
+        }
+
+        public static List<Type> GetParameterTypes(this MethodInfo info)
+        {
+            return info.GetParameters().Select(c => c.ParameterType).ToList();
+        }
+
+        public static int NumberOfTrailingZeros(in long word)
+        {
+            var mask = 1;
+            for (var i = 0; i < 64; i++, mask <<= 1)
+                if ((word & mask) != 0)
+                    return i;
+
+            return 64;
+        }
+
+        public static string ReplaceAll(this string source, string pattern, string replacement)
+        {
+            return Regex.Replace(source, pattern, replacement);
+        }
+
+        public static int BitCount(long i)
+        {
+            // HD, Figure 5-14
+            i = i - ((i >> 1) & 0x5555555555555555L);
+            i = (i & 0x3333333333333333L) + ((i >> 2) & 0x3333333333333333L);
+            i = (i + (i >> 4)) & 0x0f0f0f0f0f0f0f0fL;
+            i = i + (i >> 8);
+            i = i + (i >> 16);
+            i = i + (i >> 32);
+            return (int) i & 0x7f;
+        }
+
+        public static int NumberOfLeadingZeros(long i)
+        {
+            // HD, Figure 5-6
+            if (i == 0)
+                return 64;
+            var n = 1;
+            var x = (int) (i >> 32);
+            if (x == 0)
+            {
+                n += 32;
+                x = (int) i;
+            }
+
+            if (x >> 16 == 0)
+            {
+                n += 16;
+                x <<= 16;
+            }
+
+            if (x >> 24 == 0)
+            {
+                n += 8;
+                x <<= 8;
+            }
+
+            if (x >> 28 == 0)
+            {
+                n += 4;
+                x <<= 4;
+            }
+
+            if (x >> 30 == 0)
+            {
+                n += 2;
+                x <<= 2;
+            }
+
+            n -= x >> 31;
+            return n;
+        }
+
+        public static int RotateLeft(this int value, int count)
+        {
+            return (value << count) | (value >> (32 - count));
+        }
+
+        public static int RotateRight(this int value, int count)
+        {
+            return (value >> count) | (value << (32 - count));
+        }
+
+        public static byte[] GetBytesForString(string value, string encoding)
+        {
+            return Encoding.GetEncoding(encoding).GetBytes(value);
+        }
+
+        public static bool EqualsIgnoreCase(string text, string other)
+        {
+            return text.Equals(other, StringComparison.OrdinalIgnoreCase);
+        }
+
+        public static string GetStringForBytes(byte[] value, int p1, in int bufLength, string encoding)
+        {
+            return Encoding.GetEncoding(encoding).GetString(value);
+        }
+
+        public static void PrintStackTrace(Exception exception, TextWriter stream)
+        {
+            stream.WriteLine(exception.ToString());
+        }
+
+        public static long CurrentTimeMillis() {
+            return (long) (DateTime.UtcNow - System.Epoch).TotalMilliseconds;
+        }
+
+        public static bool IsJavaIdentifierPart(in char c)
+        {
+            var s = c.ToString();
+            const string start = @"(\p{Lu}|\p{Ll}|\p{Lt}|\p{Lm}|\p{Lo}|\p{Nl})";
+            const string extend = @"(\p{Mn}|\p{Mc}|\p{Nd}|\p{Pc}|\p{Cf})";
+            var ident = new Regex(string.Format("{0}({0}|{1})*", start, extend));
+            s = s.Normalize();
+            return ident.IsMatch(s);
+        }
+
+        public static bool Matches(this string source, string pattern)
+        {
+            return Regex.IsMatch(source, pattern);
+        }
     }
 
-    public class IdentityHashMap<K, V> : Dictionary<K, V> {
+    public class IdentityHashMap<TK, TV> : Dictionary<TK, TV> {
 
-        public IdentityHashMap() : base(new IdentityEqualityComparer<K>()) {
+        public IdentityHashMap() : base(new IdentityEqualityComparer<TK>()) {
         }
 
     }
@@ -298,20 +498,20 @@ namespace Sharpen {
 
     }
 
-    public class UUID : IEquatable<UUID>, IComparable<UUID> {
+    public class Uuid : IEquatable<Uuid>, IComparable<Uuid> {
         private readonly long mostSigBits;
         private readonly long leastSigBits;
 
-        public UUID(long mostSigBits, long leastSigBits) {
+        public Uuid(long mostSigBits, long leastSigBits) {
             this.mostSigBits = mostSigBits;
             this.leastSigBits = leastSigBits;
         }
 
-        public long getMostSignificantBits() {
+        public long GetMostSignificantBits() {
             return mostSigBits;
         }
 
-        public long getLeastSignificantBits() {
+        public long GetLeastSignificantBits() {
             return leastSigBits;
         }
 
@@ -323,12 +523,12 @@ namespace Sharpen {
                    (leastSigBits & 0xFFFFFFFFFFFF).ToString("x12");
         }
 
-        public bool Equals(UUID other) {
+        public bool Equals(Uuid other) {
             return this == other;
         }
 
         public override bool Equals(object obj) {
-            return this == obj as UUID;
+            return this == obj as Uuid;
         }
 
         public override int GetHashCode() {
@@ -338,7 +538,7 @@ namespace Sharpen {
             }
         }
 
-        public int CompareTo(UUID other) {
+        public int CompareTo(Uuid other) {
             return (mostSigBits < other.mostSigBits ? -1 :
                 (mostSigBits > other.mostSigBits ? 1 :
                     (leastSigBits < other.leastSigBits ? -1 :
@@ -346,11 +546,11 @@ namespace Sharpen {
                             0))));
         }
 
-        public static bool operator ==(UUID first, UUID second) {
+        public static bool operator ==(Uuid first, Uuid second) {
             return ReferenceEquals(first, second) || !ReferenceEquals(first, null) && !ReferenceEquals(second, null) && first.mostSigBits == second.mostSigBits && first.leastSigBits == second.leastSigBits;
         }
 
-        public static bool operator !=(UUID first, UUID second) {
+        public static bool operator !=(Uuid first, Uuid second) {
             return !(first == second);
         }
     }
@@ -362,29 +562,58 @@ namespace Sharpen {
             list.Insert(index, value);
         }
 
-        public static T RemoveAtReturningValue<T>(this List<T> list, int index) {
+        public static T RemoveAtReturningValue<T>(this IList<T> list, int index) {
             T value = list[index];
             list.RemoveAt(index);
             return value;
+        }
+        public static T RemoveAtReturningValue<T>(this LinkedList<T> list, int index) {
+            T value = list.ElementAt(index);
+            list.RemoveLast();
+            return value;
+        }
+        
+        public static bool ContainsAll<T>(this ICollection<T> list, ICollection<T> other)
+        {
+            return other.All(list.Contains);
+        }
+        public static void RemoveAll<T>(this HashSet<T> list, HashSet<T> other)
+        {
+            list.ExceptWith(other);
+        }
+        public static void RemoveAll<T>(this ICollection<T> list, ICollection<T> other)
+        {
+            foreach (var x1 in other)
+            {
+                list.Remove(x1);
+            }
+        }
+        public static void RetainAll<T>(this HashSet<T> list, HashSet<T> other)
+        {
+            list.IntersectWith(other);
+        }
+        public static void RetainAll<T>(this HashSet<T> list, ICollection<T> other)
+        {
+            list.IntersectWith(other);
         }
 
     }
 
     public static class Maps {
 
-        public static V GetOrDefault<K, V>(this IDictionary<K, V> map, K key, V defaultValue) {
-            V result;
+        public static TV GetOrDefault<TK, TV>(this IDictionary<TK, TV> map, TK key, TV defaultValue) {
+            TV result;
             return map.TryGetValue(key, out result) ? result : defaultValue;
         }
 
-        public static V GetOrNull<K, V>(this IDictionary<K, V> map, K key) where V : class {
-            V result;
+        public static TV GetOrNull<TK, TV>(this IDictionary<TK, TV> map, TK key) where TV : class {
+            TV result;
             return map.TryGetValue(key, out result) ? result : null;
         }
 
-        public static V? GetOrNullable<K, V>(this IDictionary<K, V> map, K key) where V : struct {
-            V result;
-            return map.TryGetValue(key, out result) ? result : new V?();
+        public static TV? GetOrNullable<TK, TV>(this IDictionary<TK, TV> map, TK key) where TV : struct {
+            TV result;
+            return map.TryGetValue(key, out result) ? result : new TV?();
         }
 
     }

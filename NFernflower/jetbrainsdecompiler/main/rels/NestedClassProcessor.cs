@@ -116,58 +116,58 @@ namespace JetBrainsDecompiler.Main.Rels
 			string lambda_class_name = child.simpleName;
 			VarType lambda_class_type = new VarType(lambda_class_name, true);
 			// this pointer
-			if (!is_static_lambda_content && DecompilerContext.GetOption(IIFernflowerPreferences
+			if (!is_static_lambda_content && DecompilerContext.GetOption(IFernflowerPreferences
 				.Lambda_To_Anonymous_Class))
 			{
 				Sharpen.Collections.Put(method.varproc.GetThisVars(), new VarVersionPair(0, 0), parent_class_name
 					);
 				method.varproc.SetVarName(new VarVersionPair(0, 0), parent.simpleName + ".this");
 			}
-			IDictionary<VarVersionPair, string> mapNewNames = new Dictionary<VarVersionPair, 
+			Dictionary<VarVersionPair, string> mapNewNames = new Dictionary<VarVersionPair, 
 				string>();
 			enclosingMethod.GetOrBuildGraph().IterateExprents((Exprent exprent) => 			{
-				List<Exprent> lst = exprent.GetAllExprents(true);
-				lst.Add(exprent);
-				foreach (Exprent expr in lst)
-				{
-					if (expr.type == Exprent.Exprent_New)
+					List<Exprent> lst = exprent.GetAllExprents(true);
+					lst.Add(exprent);
+					foreach (Exprent expr in lst)
 					{
-						NewExprent new_expr = (NewExprent)expr;
-						VarNamesCollector enclosingCollector = new VarNamesCollector(enclosingMethod.varproc
-							.GetVarNames());
-						if (new_expr.IsLambda() && lambda_class_type.Equals(new_expr.GetNewType()))
+						if (expr.type == Exprent.Exprent_New)
 						{
-							InvocationExprent inv_dynamic = new_expr.GetConstructor();
-							int param_index = is_static_lambda_content ? 0 : 1;
-							int varIndex = is_static_lambda_content ? 0 : 1;
-							for (int i = 0; i < md_content.@params.Length; ++i)
+							NewExprent new_expr = (NewExprent)expr;
+							VarNamesCollector enclosingCollector = new VarNamesCollector(enclosingMethod.varproc
+								.GetVarNames());
+							if (new_expr.IsLambda() && lambda_class_type.Equals(new_expr.GetNewType()))
 							{
-								VarVersionPair varVersion = new VarVersionPair(varIndex, 0);
-								if (i < vars_count)
+								InvocationExprent inv_dynamic = new_expr.GetConstructor();
+								int param_index = is_static_lambda_content ? 0 : 1;
+								int varIndex = is_static_lambda_content ? 0 : 1;
+								for (int i = 0; i < md_content.@params.Length; ++i)
 								{
-									Exprent param = inv_dynamic.GetLstParameters()[param_index + i];
-									if (param.type == Exprent.Exprent_Var)
+									VarVersionPair varVersion = new VarVersionPair(varIndex, 0);
+									if (i < vars_count)
 									{
-										Sharpen.Collections.Put(mapNewNames, varVersion, enclosingMethod.varproc.GetVarName
-											(new VarVersionPair((VarExprent)param)));
+										Exprent param = inv_dynamic.GetLstParameters()[param_index + i];
+										if (param.type == Exprent.Exprent_Var)
+										{
+											Sharpen.Collections.Put(mapNewNames, varVersion, enclosingMethod.varproc.GetVarName
+												(new VarVersionPair((VarExprent)param)));
+										}
 									}
+									else
+									{
+										Sharpen.Collections.Put(mapNewNames, varVersion, enclosingCollector.GetFreeName(method
+											.varproc.GetVarName(varVersion)));
+									}
+									varIndex += md_content.@params[i].stackSize;
 								}
-								else
-								{
-									Sharpen.Collections.Put(mapNewNames, varVersion, enclosingCollector.GetFreeName(method
-										.varproc.GetVarName(varVersion)));
-								}
-								varIndex += md_content.@params[i].stackSize;
 							}
 						}
 					}
+					return 0;
 				}
-				return 0;
-			}
 );
 			// update names of local variables
 			HashSet<string> setNewOuterNames = new HashSet<string>(mapNewNames.Values);
-			setNewOuterNames.RemoveAll(method.setOuterVarNames);
+			setNewOuterNames.ExceptWith(method.setOuterVarNames);
 			method.varproc.RefreshVarNames(new VarNamesCollector(setNewOuterNames));
 			Sharpen.Collections.AddAll(method.setOuterVarNames, setNewOuterNames);
 			foreach (KeyValuePair<VarVersionPair, string> entry in mapNewNames)
@@ -235,7 +235,7 @@ namespace JetBrainsDecompiler.Main.Rels
 			HashSet<string> setEnclosing = child.enclosingClasses;
 			LinkedList<ClassesProcessor.ClassNode> stack = new LinkedList<ClassesProcessor.ClassNode
 				>();
-			stack.Add(root);
+			stack.AddLast(root);
 			while (!(stack.Count == 0))
 			{
 				ClassesProcessor.ClassNode node = Sharpen.Collections.RemoveFirst(stack);
@@ -255,8 +255,8 @@ namespace JetBrainsDecompiler.Main.Rels
 			)
 		{
 			// class name -> constructor descriptor -> var to field link
-			IDictionary<string, IDictionary<string, List<NestedClassProcessor.VarFieldPair>>
-				> mapVarMasks = new Dictionary<string, IDictionary<string, List<NestedClassProcessor.VarFieldPair
+			Dictionary<string, Dictionary<string, List<NestedClassProcessor.VarFieldPair>>
+				> mapVarMasks = new Dictionary<string, Dictionary<string, List<NestedClassProcessor.VarFieldPair
 				>>>();
 			int clTypes = 0;
 			foreach (ClassesProcessor.ClassNode nd in node.nested)
@@ -266,7 +266,7 @@ namespace JetBrainsDecompiler.Main.Rels
 					.Acc_Interface) == 0)
 				{
 					clTypes |= nd.type;
-					IDictionary<string, List<NestedClassProcessor.VarFieldPair>> mask = GetMaskLocalVars
+					Dictionary<string, List<NestedClassProcessor.VarFieldPair>> mask = GetMaskLocalVars
 						(nd.GetWrapper());
 					if ((mask.Count == 0))
 					{
@@ -281,8 +281,8 @@ namespace JetBrainsDecompiler.Main.Rels
 				}
 			}
 			// local var masks
-			IDictionary<string, IDictionary<string, List<NestedClassProcessor.VarFieldPair>>
-				> mapVarFieldPairs = new Dictionary<string, IDictionary<string, List<NestedClassProcessor.VarFieldPair
+			Dictionary<string, Dictionary<string, List<NestedClassProcessor.VarFieldPair>>
+				> mapVarFieldPairs = new Dictionary<string, Dictionary<string, List<NestedClassProcessor.VarFieldPair
 				>>>();
 			if (clTypes != ClassesProcessor.ClassNode.Class_Member)
 			{
@@ -293,75 +293,75 @@ namespace JetBrainsDecompiler.Main.Rels
 					{
 						// neither abstract, nor native
 						method.GetOrBuildGraph().IterateExprents((Exprent exprent) => 						{
-							List<Exprent> lst = exprent.GetAllExprents(true);
-							lst.Add(exprent);
-							foreach (Exprent expr in lst)
-							{
-								if (expr.type == Exprent.Exprent_New)
+								List<Exprent> lst = exprent.GetAllExprents(true);
+								lst.Add(exprent);
+								foreach (Exprent expr in lst)
 								{
-									InvocationExprent constructor = ((NewExprent)expr).GetConstructor();
-									if (constructor != null && mapVarMasks.ContainsKey(constructor.GetClassname()))
+									if (expr.type == Exprent.Exprent_New)
 									{
-										// non-static inner class constructor
-										string refClassName = constructor.GetClassname();
-										ClassesProcessor.ClassNode nestedClassNode = node.GetClassNode(refClassName);
-										if (nestedClassNode.type != ClassesProcessor.ClassNode.Class_Member)
+										InvocationExprent constructor = ((NewExprent)expr).GetConstructor();
+										if (constructor != null && mapVarMasks.ContainsKey(constructor.GetClassname()))
 										{
-											List<NestedClassProcessor.VarFieldPair> mask = mapVarMasks.GetOrNull(refClassName
+											// non-static inner class constructor
+											string refClassName = constructor.GetClassname();
+											ClassesProcessor.ClassNode nestedClassNode = node.GetClassNode(refClassName);
+											if (nestedClassNode.type != ClassesProcessor.ClassNode.Class_Member)
+											{
+												List<NestedClassProcessor.VarFieldPair> mask = mapVarMasks.GetOrNull(refClassName
 												).GetOrNull(constructor.GetStringDescriptor());
-											if (!mapVarFieldPairs.ContainsKey(refClassName))
-											{
-												Sharpen.Collections.Put(mapVarFieldPairs, refClassName, new Dictionary<string, IList
-													<NestedClassProcessor.VarFieldPair>>());
-											}
-											List<NestedClassProcessor.VarFieldPair> lstTemp = new List<NestedClassProcessor.VarFieldPair
-												>();
-											for (int i = 0; i < mask.Count; i++)
-											{
-												Exprent param = constructor.GetLstParameters()[i];
-												NestedClassProcessor.VarFieldPair pair = null;
-												if (param.type == Exprent.Exprent_Var && mask[i] != null)
+												if (!mapVarFieldPairs.ContainsKey(refClassName))
 												{
-													VarVersionPair varPair = new VarVersionPair((VarExprent)param);
-													// FIXME: flags of variables are wrong! Correct the entire functionality.
-													// if(method.varproc.getVarFinal(varPair) != VarTypeProcessor.VAR_NON_FINAL) {
-													pair = new NestedClassProcessor.VarFieldPair(mask[i].fieldKey, varPair);
+													Sharpen.Collections.Put(mapVarFieldPairs, refClassName, new Dictionary<string, IList
+														<NestedClassProcessor.VarFieldPair>>());
 												}
-												// }
-												lstTemp.Add(pair);
-											}
-											List<NestedClassProcessor.VarFieldPair> pairMask = mapVarFieldPairs.GetOrNull(refClassName
-												).GetOrNull(constructor.GetStringDescriptor());
-											if (pairMask == null)
-											{
-												pairMask = lstTemp;
-											}
-											else
-											{
-												for (int i = 0; i < pairMask.Count; i++)
+												List<NestedClassProcessor.VarFieldPair> lstTemp = new List<NestedClassProcessor.VarFieldPair
+												>();
+												for (int i = 0; i < mask.Count; i++)
 												{
-													if (!InterpreterUtil.EqualObjects(pairMask[i], lstTemp[i]))
+													Exprent param = constructor.GetLstParameters()[i];
+													NestedClassProcessor.VarFieldPair pair = null;
+													if (param.type == Exprent.Exprent_Var && mask[i] != null)
 													{
-														pairMask[i] = null;
+														VarVersionPair varPair = new VarVersionPair((VarExprent)param);
+														// FIXME: flags of variables are wrong! Correct the entire functionality.
+														// if(method.varproc.getVarFinal(varPair) != VarTypeProcessor.VAR_NON_FINAL) {
+														pair = new NestedClassProcessor.VarFieldPair(mask[i].fieldKey, varPair);
+													}
+													// }
+													lstTemp.Add(pair);
+												}
+												List<NestedClassProcessor.VarFieldPair> pairMask = mapVarFieldPairs.GetOrNull(refClassName
+												).GetOrNull(constructor.GetStringDescriptor());
+												if (pairMask == null)
+												{
+													pairMask = lstTemp;
+												}
+												else
+												{
+													for (int i = 0; i < pairMask.Count; i++)
+													{
+														if (!InterpreterUtil.EqualObjects(pairMask[i], lstTemp[i]))
+														{
+															pairMask[i] = null;
+														}
 													}
 												}
+												Sharpen.Collections.Put(mapVarFieldPairs.GetOrNull(refClassName), constructor.GetStringDescriptor
+													(), pairMask);
+												nestedClassNode.enclosingMethod = InterpreterUtil.MakeUniqueKey(method.methodStruct
+													.GetName(), method.methodStruct.GetDescriptor());
 											}
-											Sharpen.Collections.Put(mapVarFieldPairs.GetOrNull(refClassName), constructor.GetStringDescriptor
-												(), pairMask);
-											nestedClassNode.enclosingMethod = InterpreterUtil.MakeUniqueKey(method.methodStruct
-												.GetName(), method.methodStruct.GetDescriptor());
 										}
 									}
 								}
+								return 0;
 							}
-							return 0;
-						}
 );
 					}
 				}
 			}
 			// merge var masks
-			foreach (KeyValuePair<string, IDictionary<string, List<NestedClassProcessor.VarFieldPair
+			foreach (KeyValuePair<string, Dictionary<string, List<NestedClassProcessor.VarFieldPair
 				>>> enclosing in mapVarMasks)
 			{
 				ClassesProcessor.ClassNode nestedNode = node.GetClassNode(enclosing.Key);
@@ -450,13 +450,13 @@ namespace JetBrainsDecompiler.Main.Rels
 				if (method.root != null)
 				{
 					// neither abstract nor native
-					IDictionary<VarVersionPair, string> mapNewNames = new Dictionary<VarVersionPair, 
+					Dictionary<VarVersionPair, string> mapNewNames = new Dictionary<VarVersionPair, 
 						string>();
 					// local var names
-					IDictionary<VarVersionPair, VarType> mapNewTypes = new Dictionary<VarVersionPair, 
+					Dictionary<VarVersionPair, VarType> mapNewTypes = new Dictionary<VarVersionPair, 
 						VarType>();
 					// local var types
-					IDictionary<int, VarVersionPair> mapParamsToNewVars = new Dictionary<int, VarVersionPair
+					Dictionary<int, VarVersionPair> mapParamsToNewVars = new Dictionary<int, VarVersionPair
 						>();
 					if (method.synthParameters != null)
 					{
@@ -499,7 +499,7 @@ namespace JetBrainsDecompiler.Main.Rels
 							varIndex += md.@params[index++].stackSize;
 						}
 					}
-					IDictionary<string, VarVersionPair> mapFieldsToNewVars = new Dictionary<string, VarVersionPair
+					Dictionary<string, VarVersionPair> mapFieldsToNewVars = new Dictionary<string, VarVersionPair
 						>();
 					for (ClassesProcessor.ClassNode classNode = child; classNode != null; classNode =
 						 classNode.parent)
@@ -548,7 +548,7 @@ namespace JetBrainsDecompiler.Main.Rels
 						}
 					}
 					HashSet<string> setNewOuterNames = new HashSet<string>(mapNewNames.Values);
-					setNewOuterNames.RemoveAll(method.setOuterVarNames);
+					setNewOuterNames.ExceptWith(method.setOuterVarNames);
 					method.varproc.RefreshVarNames(new VarNamesCollector(setNewOuterNames));
 					Sharpen.Collections.AddAll(method.setOuterVarNames, setNewOuterNames);
 					foreach (KeyValuePair<VarVersionPair, string> entry in mapNewNames)
@@ -569,8 +569,8 @@ namespace JetBrainsDecompiler.Main.Rels
 
 		private sealed class _IExprentIterator_497 : DirectGraph.IExprentIterator
 		{
-			public _IExprentIterator_497(ClassesProcessor.ClassNode child, IDictionary<string
-				, VarVersionPair> mapFieldsToNewVars, MethodWrapper method, IDictionary<int, VarVersionPair
+			public _IExprentIterator_497(ClassesProcessor.ClassNode child, Dictionary<string
+				, VarVersionPair> mapFieldsToNewVars, MethodWrapper method, Dictionary<int, VarVersionPair
 				> mapParamsToNewVars)
 			{
 				this.child = child;
@@ -660,17 +660,17 @@ namespace JetBrainsDecompiler.Main.Rels
 
 			private readonly ClassesProcessor.ClassNode child;
 
-			private readonly IDictionary<string, VarVersionPair> mapFieldsToNewVars;
+			private readonly Dictionary<string, VarVersionPair> mapFieldsToNewVars;
 
 			private readonly MethodWrapper method;
 
-			private readonly IDictionary<int, VarVersionPair> mapParamsToNewVars;
+			private readonly Dictionary<int, VarVersionPair> mapParamsToNewVars;
 		}
 
-		private static IDictionary<string, List<NestedClassProcessor.VarFieldPair>> GetMaskLocalVars
+		private static Dictionary<string, List<NestedClassProcessor.VarFieldPair>> GetMaskLocalVars
 			(ClassWrapper wrapper)
 		{
-			IDictionary<string, List<NestedClassProcessor.VarFieldPair>> mapMasks = new Dictionary
+			Dictionary<string, List<NestedClassProcessor.VarFieldPair>> mapMasks = new Dictionary
 				<string, List<NestedClassProcessor.VarFieldPair>>();
 			StructClass cl = wrapper.GetClassStruct();
 			// iterate over constructors
@@ -714,7 +714,7 @@ namespace JetBrainsDecompiler.Main.Rels
 			{
 				return null;
 			}
-			bool noSynthFlag = DecompilerContext.GetOption(IIFernflowerPreferences.Synthetic_Not_Set
+			bool noSynthFlag = DecompilerContext.GetOption(IFernflowerPreferences.Synthetic_Not_Set
 				);
 			// no loop at the begin
 			DirectNode firstNode = graph.first;
@@ -907,10 +907,11 @@ namespace JetBrainsDecompiler.Main.Rels
 			)
 		{
 			LinkedList<Statement> stack = new LinkedList<Statement>();
-			stack.Add(stat);
+			stack.AddLast(stat);
 			while (!(stack.Count == 0))
 			{
-				Statement st = stack.RemoveAtReturningValue(0);
+				Statement st = stack.First.Value;
+				stack.RemoveFirst();
 				if ((stack.Count == 0) || setStats.Contains(st))
 				{
 					if (st.IsLabeled() && !(stack.Count == 0) || st.GetExprents() != null)
@@ -922,7 +923,7 @@ namespace JetBrainsDecompiler.Main.Rels
 					{
 						case Statement.Type_Sequence:
 						{
-							stack.AddAll(0, st.GetStats());
+							st.GetStats().ForEach(i => stack.AddLast(i));
 							break;
 						}
 
@@ -931,7 +932,7 @@ namespace JetBrainsDecompiler.Main.Rels
 						case Statement.Type_Switch:
 						case Statement.Type_Syncronized:
 						{
-							stack.Add(st.GetFirst());
+							stack.AddLast(st.GetFirst());
 							break;
 						}
 
@@ -945,8 +946,8 @@ namespace JetBrainsDecompiler.Main.Rels
 			return null;
 		}
 
-		private static Statement GetDefStatement<_T0>(Statement stat, VarType classType, 
-			HashSet<_T0> setStats)
+		private static Statement GetDefStatement(Statement stat, VarType classType, 
+			HashSet<Statement> setStats)
 		{
 			List<Exprent> lst = new List<Exprent>();
 			Statement retStat = null;

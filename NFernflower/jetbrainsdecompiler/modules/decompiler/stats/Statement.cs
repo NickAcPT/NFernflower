@@ -14,7 +14,7 @@ using Sharpen;
 
 namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 {
-	public class Statement : IIMatchable
+	public class Statement : IMatchable
 	{
 		public const int Statedge_All = unchecked((int)(0x80000000));
 
@@ -58,16 +58,16 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 
 		public int id;
 
-		private readonly IDictionary<int, List<StatEdge>> mapSuccEdges = new Dictionary<
+		private readonly Dictionary<int, List<StatEdge>> mapSuccEdges = new Dictionary<
 			int, List<StatEdge>>();
 
-		private readonly IDictionary<int, List<StatEdge>> mapPredEdges = new Dictionary<
+		private readonly Dictionary<int, List<StatEdge>> mapPredEdges = new Dictionary<
 			int, List<StatEdge>>();
 
-		private readonly IDictionary<int, List<Statement>> mapSuccStates = new Dictionary
+		private readonly Dictionary<int, List<Statement>> mapSuccStates = new Dictionary
 			<int, List<Statement>>();
 
-		private readonly IDictionary<int, List<Statement>> mapPredStates = new Dictionary
+		private readonly Dictionary<int, List<Statement>> mapPredStates = new Dictionary
 			<int, List<Statement>>();
 
 		protected internal readonly VBStyleCollection<Statement, int> stats = new VBStyleCollection
@@ -129,7 +129,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 			ProcessMap(mapPredStates);
 		}
 
-		private static void ProcessMap<T>(IDictionary<int, List<T>> map)
+		private static void ProcessMap<T>(Dictionary<int, List<T>> map)
 		{
 			Sharpen.Collections.Remove(map, StatEdge.Type_Exception);
 			List<T> lst = map.GetOrNull(Statedge_Direct_All);
@@ -183,7 +183,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 				.Type_Exception, Direction_Forward));
 			foreach (Statement node in setNodes)
 			{
-				setHandlers.RetainAll(node.GetNeighbours(StatEdge.Type_Exception, Direction_Forward
+				setHandlers.UnionWith(node.GetNeighbours(StatEdge.Type_Exception, Direction_Forward
 					));
 			}
 			if (!(setHandlers.Count == 0))
@@ -256,9 +256,9 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 
 		private void AddEdgeDirectInternal(int direction, StatEdge edge, int edgetype)
 		{
-			IDictionary<int, List<StatEdge>> mapEdges = direction == Direction_Backward ? mapPredEdges
+			Dictionary<int, List<StatEdge>> mapEdges = direction == Direction_Backward ? mapPredEdges
 				 : mapSuccEdges;
-			IDictionary<int, List<Statement>> mapStates = direction == Direction_Backward ? 
+			Dictionary<int, List<Statement>> mapStates = direction == Direction_Backward ? 
 				mapPredStates : mapSuccStates;
 			mapEdges.ComputeIfAbsent(edgetype, (int k) => new List<StatEdge>()).Add(edge);
 			mapStates.ComputeIfAbsent(edgetype, (int k) => new List<Statement>()).Add(direction
@@ -285,9 +285,9 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 
 		private void RemoveEdgeDirectInternal(int direction, StatEdge edge, int edgetype)
 		{
-			IDictionary<int, List<StatEdge>> mapEdges = direction == Direction_Backward ? mapPredEdges
+			Dictionary<int, List<StatEdge>> mapEdges = direction == Direction_Backward ? mapPredEdges
 				 : mapSuccEdges;
-			IDictionary<int, List<Statement>> mapStates = direction == Direction_Backward ? 
+			Dictionary<int, List<Statement>> mapStates = direction == Direction_Backward ? 
 				mapPredStates : mapSuccStates;
 			List<StatEdge> lst = mapEdges.GetOrNull(edgetype);
 			if (lst != null)
@@ -597,17 +597,17 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 		// *****************************************************************************
 		// private methods
 		// *****************************************************************************
-		private static void AddToReversePostOrderListIterative<_T0>(Statement root, IList
-			<_T0> lst)
+		private static void AddToReversePostOrderListIterative(Statement root, IList
+			<Statement> lst)
 		{
 			LinkedList<Statement> stackNode = new LinkedList<Statement>();
 			LinkedList<int> stackIndex = new LinkedList<int>();
 			HashSet<Statement> setVisited = new HashSet<Statement>();
-			stackNode.Add(root);
-			stackIndex.Add(0);
+			stackNode.AddLast(root);
+			stackIndex.AddLast(0);
 			while (!(stackNode.Count == 0))
 			{
-				Statement node = stackNode.GetLast();
+				Statement node = stackNode.Last.Value;
 				int index = Sharpen.Collections.RemoveLast(stackIndex);
 				setVisited.Add(node);
 				List<StatEdge> lstEdges = node.GetAllSuccessorEdges();
@@ -619,22 +619,22 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 						.GetType() == StatEdge.Type_Exception))
 					{
 						// TODO: edge filter?
-						stackIndex.Add(index + 1);
-						stackNode.Add(succ);
-						stackIndex.Add(0);
+						stackIndex.AddLast(index + 1);
+						stackNode.AddLast(succ);
+						stackIndex.AddLast(0);
 						break;
 					}
 				}
 				if (index == lstEdges.Count)
 				{
-					lst.Add(0, node);
+					lst.Insert(0, node);
 					Sharpen.Collections.RemoveLast(stackNode);
 				}
 			}
 		}
 
-		private static void AddToPostReversePostOrderList<_T0, _T0>(Statement stat, IList
-			<_T0> lst, HashSet<_T0> setVisited)
+		private static void AddToPostReversePostOrderList(Statement stat, IList
+			<Statement> lst, HashSet<Statement> setVisited)
 		{
 			if (setVisited.Contains(stat))
 			{
@@ -651,7 +651,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 					AddToPostReversePostOrderList(pred, lst, setVisited);
 				}
 			}
-			lst.Add(0, stat);
+			lst.Insert(0, stat);
 		}
 
 		// *****************************************************************************
@@ -659,9 +659,9 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 		// *****************************************************************************
 		public virtual void ChangeEdgeNode(int direction, StatEdge edge, Statement value)
 		{
-			IDictionary<int, List<StatEdge>> mapEdges = direction == Direction_Backward ? mapPredEdges
+			Dictionary<int, List<StatEdge>> mapEdges = direction == Direction_Backward ? mapPredEdges
 				 : mapSuccEdges;
-			IDictionary<int, List<Statement>> mapStates = direction == Direction_Backward ? 
+			Dictionary<int, List<Statement>> mapStates = direction == Direction_Backward ? 
 				mapPredStates : mapSuccStates;
 			int type = edge.GetType();
 			int[] arrtypes;
@@ -717,7 +717,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 
 		private List<StatEdge> GetEdges(int type, int direction)
 		{
-			IDictionary<int, List<StatEdge>> map = direction == Direction_Backward ? mapPredEdges
+			Dictionary<int, List<StatEdge>> map = direction == Direction_Backward ? mapPredEdges
 				 : mapSuccEdges;
 			List<StatEdge> res;
 			if ((type & (type - 1)) == 0)
@@ -745,7 +745,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 
 		public virtual List<Statement> GetNeighbours(int type, int direction)
 		{
-			IDictionary<int, List<Statement>> map = direction == Direction_Backward ? mapPredStates
+			Dictionary<int, List<Statement>> map = direction == Direction_Backward ? mapPredStates
 				 : mapSuccStates;
 			List<Statement> res;
 			if ((type & (type - 1)) == 0)
@@ -919,7 +919,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 		// *****************************************************************************
 		// IMatchable implementation
 		// *****************************************************************************
-		public override IIMatchable FindObject(MatchNode matchNode, int index)
+		public override IMatchable FindObject(MatchNode matchNode, int index)
 		{
 			int node_type = matchNode.GetType();
 			if (node_type == MatchNode.Matchnode_Statement && !(this.stats.Count == 0))

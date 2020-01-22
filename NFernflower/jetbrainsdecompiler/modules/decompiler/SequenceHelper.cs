@@ -77,7 +77,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 								}
 							}
 							lst.RemoveAtReturningValue(i);
-							lst.AddAll(i, st.GetStats());
+							lst.InsertRange(i, st.GetStats());
 							i--;
 							unfolded = true;
 						}
@@ -245,7 +245,7 @@ outer_break: ;
 					{
 						if (next.GetExprents() != null)
 						{
-							next.GetExprents().AddAll(0, current.GetExprents());
+							next.GetExprents().InsertRange(0, current.GetExprents());
 							current.GetExprents().Clear();
 							found = true;
 						}
@@ -254,7 +254,7 @@ outer_break: ;
 							Statement first = GetFirstExprentlist(next);
 							if (first != null)
 							{
-								first.GetExprents().AddAll(0, current.GetExprents());
+								first.GetExprents().InsertRange(0, current.GetExprents());
 								current.GetExprents().Clear();
 								found = true;
 							}

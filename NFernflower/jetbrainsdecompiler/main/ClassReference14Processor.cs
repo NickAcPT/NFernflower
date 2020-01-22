@@ -1,5 +1,6 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System.Collections.Generic;
+using System.Linq;
 using JetBrainsDecompiler.Code;
 using JetBrainsDecompiler.Main.Extern;
 using JetBrainsDecompiler.Main.Rels;
@@ -28,8 +29,8 @@ namespace JetBrainsDecompiler.Main
 			invFor.SetDescriptor(MethodDescriptor.ParseDescriptor("(Ljava/lang/String;)Ljava/lang/Class;"
 				));
 			invFor.SetStatic(true);
-			invFor.SetLstParameters(System.Linq.Enumerable.ToList(new [] {new VarExprent(0, VarType
-				.Vartype_String, null)}));
+			invFor.SetLstParameters(new [] {new VarExprent(0, VarType
+				.Vartype_String, null)}.Cast<Exprent>().ToList());
 			Body_Expr = new ExitExprent(ExitExprent.Exit_Return, invFor, VarType.Vartype_Class
 				, null);
 			InvocationExprent ctor = new InvocationExprent();
@@ -48,16 +49,16 @@ namespace JetBrainsDecompiler.Main
 			invCause.SetDescriptor(MethodDescriptor.ParseDescriptor("(Ljava/lang/Throwable;)Ljava/lang/Throwable;"
 				));
 			invCause.SetInstance(newExpr);
-			invCause.SetLstParameters(System.Linq.Enumerable.ToList(new [] {new VarExprent(2, 
+			invCause.SetLstParameters(new List<Exprent>(new [] {new VarExprent(2, 
 				new VarType(ICodeConstants.Type_Object, 0, "java/lang/ClassNotFoundException"), 
-				null)}));
+				null)}.ToList()));
 			Handler_Expr = new ExitExprent(ExitExprent.Exit_Throw, invCause, null, null);
 		}
 
 		public static void ProcessClassReferences(ClassesProcessor.ClassNode node)
 		{
 			// find the synthetic method Class class$(String) if present
-			IDictionary<ClassWrapper, MethodWrapper> mapClassMeths = new Dictionary<ClassWrapper
+			Dictionary<ClassWrapper, MethodWrapper> mapClassMeths = new Dictionary<ClassWrapper
 				, MethodWrapper>();
 			MapClassMethods(node, mapClassMeths);
 			if ((mapClassMeths.Count == 0))
@@ -77,8 +78,8 @@ namespace JetBrainsDecompiler.Main
 			}
 		}
 
-		private static void ProcessClassRec<_T0>(ClassesProcessor.ClassNode node, IDictionary
-			<ClassWrapper, MethodWrapper> mapClassMeths, HashSet<_T0> setFound)
+		private static void ProcessClassRec(ClassesProcessor.ClassNode node, IDictionary
+			<ClassWrapper, MethodWrapper> mapClassMeths, HashSet<ClassWrapper> setFound)
 		{
 			ClassWrapper wrapper = node.GetWrapper();
 			// search code
@@ -89,15 +90,15 @@ namespace JetBrainsDecompiler.Main
 				{
 					DirectGraph graph = meth.GetOrBuildGraph();
 					graph.IterateExprents((Exprent exprent) => 					{
-						foreach (KeyValuePair<ClassWrapper, MethodWrapper> ent in mapClassMeths)
-						{
-							if (ReplaceInvocations(exprent, ent.Key, ent.Value))
+							foreach (KeyValuePair<ClassWrapper, MethodWrapper> ent in mapClassMeths)
 							{
-								setFound.Add(ent.Key);
+								if (ReplaceInvocations(exprent, ent.Key, ent.Value))
+								{
+									setFound.Add(ent.Key);
+								}
 							}
+							return 0;
 						}
-						return 0;
-					}
 );
 				}
 			}
@@ -132,10 +133,10 @@ namespace JetBrainsDecompiler.Main
 			}
 		}
 
-		private static void MapClassMethods(ClassesProcessor.ClassNode node, IDictionary<
+		private static void MapClassMethods(ClassesProcessor.ClassNode node, Dictionary<
 			ClassWrapper, MethodWrapper> map)
 		{
-			bool noSynthFlag = DecompilerContext.GetOption(IIFernflowerPreferences.Synthetic_Not_Set
+			bool noSynthFlag = DecompilerContext.GetOption(IFernflowerPreferences.Synthetic_Not_Set
 				);
 			ClassWrapper wrapper = node.GetWrapper();
 			foreach (MethodWrapper method in wrapper.GetMethods())
@@ -231,7 +232,7 @@ namespace JetBrainsDecompiler.Main
 										().descriptorString);
 									// FIXME: can be null! why??
 									if (fd != null && fd.HasModifier(ICodeConstants.Acc_Static) && (fd.IsSynthetic() 
-										|| DecompilerContext.GetOption(IIFernflowerPreferences.Synthetic_Not_Set)))
+										|| DecompilerContext.GetOption(IFernflowerPreferences.Synthetic_Not_Set)))
 									{
 										if (fexpr.GetLstOperands()[1].type == Exprent.Exprent_Assignment && fexpr.GetLstOperands
 											()[2].Equals(field))

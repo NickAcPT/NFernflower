@@ -45,7 +45,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			List<Exprent> expressions = stat.GetExprents();
 			if (expressions == null)
 			{
-				bool processClass14 = DecompilerContext.GetOption(IIFernflowerPreferences.Decompile_Class_1_4
+				bool processClass14 = DecompilerContext.GetOption(IFernflowerPreferences.Decompile_Class_1_4
 					);
 				while (true)
 				{
@@ -126,7 +126,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 					continue;
 				}
 				// remove getClass() invocation, which is part of a qualified new
-				if (DecompilerContext.GetOption(IIFernflowerPreferences.Remove_Get_Class_New))
+				if (DecompilerContext.GetOption(IFernflowerPreferences.Remove_Get_Class_New))
 				{
 					if (IsQualifiedNewGetClass(current, next))
 					{
@@ -262,7 +262,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 							return 0;
 						}
 						VarExprent arrVar = (VarExprent)@as.GetLeft();
-						IDictionary<int, Exprent> mapInit = new Dictionary<int, Exprent>();
+						Dictionary<int, Exprent> mapInit = new Dictionary<int, Exprent>();
 						int i = 1;
 						while (index + i < list.Count && i <= size)
 						{
@@ -687,7 +687,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 								{
 									// ifVar.getIndex() >= VarExprent.STACK_BASE) {
 									bool found = false;
-									foreach (KeyValuePair<VarVersionPair, FastSparseSetFactory.FastSparseSet<int>> ent
+									foreach (KeyValuePair<VarVersionPair, FastSparseSetFactory<int>.FastSparseSet<int>> ent
 										 in ssa.GetPhi())
 									{
 										if (ent.Key.var == ifVar.GetIndex())

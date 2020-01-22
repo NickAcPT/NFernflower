@@ -2,11 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Java.Util;
 using JetBrainsDecompiler.Code;
 using JetBrainsDecompiler.Code.Interpreter;
 using JetBrainsDecompiler.Main;
 using JetBrainsDecompiler.Modules.Code;
+using JetBrainsDecompiler.Modules.Decompiler.Decompose;
 using JetBrainsDecompiler.Struct;
 using JetBrainsDecompiler.Struct.Consts;
 using JetBrainsDecompiler.Struct.Gen;
@@ -27,7 +27,7 @@ namespace JetBrainsDecompiler.Code.Cfg
 
 		private List<ExceptionRangeCFG> exceptions;
 
-		private IDictionary<BasicBlock, BasicBlock> subroutines;
+		private Dictionary<BasicBlock, BasicBlock> subroutines;
 
 		private readonly HashSet<BasicBlock> finallyExits = new HashSet<BasicBlock>();
 
@@ -149,8 +149,8 @@ namespace JetBrainsDecompiler.Code.Cfg
 					}
 				}
 			}
-			subroutines.RemoveIf((KeyValuePair<BasicBlock, BasicBlock> ent) => ent.Key == block
-				 || ent.Value == block);
+			subroutines.RemoveIf(ent => ent.Key == block
+			                              || ent.Value == block);
 		}
 
 		public virtual ExceptionRangeCFG GetExceptionRange(BasicBlock handler, BasicBlock
@@ -196,7 +196,7 @@ namespace JetBrainsDecompiler.Code.Cfg
 		private void BuildBlocks(InstructionSequence instrseq)
 		{
 			short[] states = FindStartInstructions(instrseq);
-			IDictionary<int, BasicBlock> mapInstrBlocks = new Dictionary<int, BasicBlock>();
+			Dictionary<int, BasicBlock> mapInstrBlocks = new Dictionary<int, BasicBlock>();
 			VBStyleCollection<BasicBlock, int> colBlocks = CreateBasicBlocks(states, instrseq
 				, mapInstrBlocks);
 			blocks = colBlocks;
@@ -265,7 +265,7 @@ namespace JetBrainsDecompiler.Code.Cfg
 		}
 
 		private VBStyleCollection<BasicBlock, int> CreateBasicBlocks(short[] startblock, 
-			InstructionSequence instrseq, IDictionary<int, BasicBlock> mapInstrBlocks)
+			InstructionSequence instrseq, Dictionary<int, BasicBlock> mapInstrBlocks)
 		{
 			VBStyleCollection<BasicBlock, int> col = new VBStyleCollection<BasicBlock, int>();
 			InstructionSequence currseq = null;
@@ -293,7 +293,7 @@ namespace JetBrainsDecompiler.Code.Cfg
 			return col;
 		}
 
-		private static void ConnectBlocks(List<BasicBlock> lstbb, IDictionary<int, BasicBlock
+		private static void ConnectBlocks(List<BasicBlock> lstbb, Dictionary<int, BasicBlock
 			> mapInstrBlocks)
 		{
 			for (int i = 0; i < lstbb.Count; i++)
@@ -335,11 +335,11 @@ namespace JetBrainsDecompiler.Code.Cfg
 			}
 		}
 
-		private void SetExceptionEdges(InstructionSequence instrseq, IDictionary<int, BasicBlock
+		private void SetExceptionEdges(InstructionSequence instrseq, Dictionary<int, BasicBlock
 			> instrBlocks)
 		{
 			exceptions = new List<ExceptionRangeCFG>();
-			IDictionary<string, ExceptionRangeCFG> mapRanges = new Dictionary<string, ExceptionRangeCFG
+			Dictionary<string, ExceptionRangeCFG> mapRanges = new Dictionary<string, ExceptionRangeCFG
 				>();
 			foreach (ExceptionHandler handler in instrseq.GetExceptionTable().GetHandlers())
 			{
@@ -372,8 +372,7 @@ namespace JetBrainsDecompiler.Code.Cfg
 
 		private void SetSubroutineEdges()
 		{
-			IDictionary<BasicBlock, BasicBlock> subroutines = new LinkedHashMap<BasicBlock, BasicBlock
-				>();
+			var subroutines = new Dictionary<BasicBlock, BasicBlock>();
 			foreach (BasicBlock block in blocks)
 			{
 				if (block.GetSeq().GetLastInstr().opcode == ICodeConstants.opc_jsr)
@@ -382,8 +381,8 @@ namespace JetBrainsDecompiler.Code.Cfg
 					LinkedList<LinkedList<BasicBlock>> stackJsrStacks = new LinkedList<LinkedList<BasicBlock
 						>>();
 					HashSet<BasicBlock> setVisited = new HashSet<BasicBlock>();
-					stack.Add(block);
-					stackJsrStacks.Add(new LinkedList<BasicBlock>());
+					stack.AddLast(block);
+					stackJsrStacks.AddLast(new LinkedList<BasicBlock>());
 					while (!(stack.Count == 0))
 					{
 						BasicBlock node = Sharpen.Collections.RemoveFirst(stack);
@@ -393,13 +392,13 @@ namespace JetBrainsDecompiler.Code.Cfg
 						{
 							case ICodeConstants.opc_jsr:
 							{
-								jsrstack.Add(node);
+								jsrstack.AddLast(node);
 								break;
 							}
 
 							case ICodeConstants.opc_ret:
 							{
-								BasicBlock enter = jsrstack.GetLast();
+								BasicBlock enter = jsrstack.Last.Value;
 								BasicBlock exit = blocks.GetWithKey(enter.id + 1);
 								// FIXME: find successor in a better way
 								if (exit != null)
@@ -424,8 +423,8 @@ namespace JetBrainsDecompiler.Code.Cfg
 							{
 								if (!setVisited.Contains(succ))
 								{
-									stack.Add(succ);
-									stackJsrStacks.Add(new LinkedList<BasicBlock>(jsrstack));
+									stack.AddLast(succ);
+									stackJsrStacks.AddLast(new LinkedList<BasicBlock>(jsrstack));
 								}
 							}
 						}
@@ -446,15 +445,15 @@ namespace JetBrainsDecompiler.Code.Cfg
 			}
 		}
 
-		private class JsrRecord
+		public class JsrRecord
 		{
-			private readonly BasicBlock jsr;
+			public BasicBlock jsr { get; }
 
-			private readonly HashSet<BasicBlock> range;
+			public HashSet<BasicBlock> range { get; }
 
-			private readonly BasicBlock ret;
+			public BasicBlock ret { get; }
 
-			private JsrRecord(BasicBlock jsr, HashSet<BasicBlock> range, BasicBlock ret)
+			public JsrRecord(BasicBlock jsr, HashSet<BasicBlock> range, BasicBlock ret)
 			{
 				this.jsr = jsr;
 				this.range = range;
@@ -502,7 +501,7 @@ namespace JetBrainsDecompiler.Code.Cfg
 					{
 						// rang 0 doesn't contain entry 1 and vice versa
 						HashSet<BasicBlock> setc = new HashSet<BasicBlock>(set);
-						setc.RetainAll(set1);
+						setc.IntersectWith(set1);
 						if (!(setc.Count == 0))
 						{
 							SplitJsrRange(arr.jsr, arr.ret, setc);
@@ -517,7 +516,7 @@ namespace JetBrainsDecompiler.Code.Cfg
 		private HashSet<BasicBlock> GetJsrRange(BasicBlock jsr, BasicBlock ret)
 		{
 			HashSet<BasicBlock> blocks = new HashSet<BasicBlock>();
-			List<BasicBlock> lstNodes = new LinkedList<BasicBlock>();
+			List<BasicBlock> lstNodes = new List<BasicBlock>();
 			lstNodes.Add(jsr);
 			BasicBlock dom = jsr.GetSuccs()[0];
 			while (!(lstNodes.Count == 0))
@@ -585,8 +584,8 @@ CHILD_break: ;
 		private void SplitJsrRange(BasicBlock jsr, BasicBlock ret, HashSet<BasicBlock> common_blocks
 			)
 		{
-			List<BasicBlock> lstNodes = new LinkedList<BasicBlock>();
-			IDictionary<int, BasicBlock> mapNewNodes = new Dictionary<int, BasicBlock>();
+			List<BasicBlock> lstNodes = new List<BasicBlock>();
+			Dictionary<int, BasicBlock> mapNewNodes = new Dictionary<int, BasicBlock>();
 			lstNodes.Add(jsr);
 			Sharpen.Collections.Put(mapNewNodes, jsr.id, jsr);
 			while (!(lstNodes.Count == 0))
@@ -675,7 +674,7 @@ CHILD_break: ;
 				ExceptionRangeCFG range = exceptions[i];
 				List<BasicBlock> lstRange = range.GetProtectedRange();
 				HashSet<BasicBlock> setBoth = new HashSet<BasicBlock>(common_blocks);
-				setBoth.RetainAll(lstRange);
+				setBoth.IntersectWith(lstRange);
 				if (setBoth.Count > 0)
 				{
 					List<BasicBlock> lstNewRange;
@@ -775,24 +774,23 @@ CHILD_break: ;
 			}
 		}
 
-		public virtual List<BasicBlock> GetReversePostOrder()
+		public virtual LinkedList<IGraphNode> GetReversePostOrder()
 		{
-			List<BasicBlock> res = new LinkedList<BasicBlock>();
+			LinkedList<IGraphNode> res = new LinkedList<IGraphNode>();
 			AddToReversePostOrderListIterative(first, res);
 			return res;
 		}
 
-		private static void AddToReversePostOrderListIterative<_T0>(BasicBlock root, IList
-			<_T0> lst)
+		private static void AddToReversePostOrderListIterative(BasicBlock root, LinkedList<IGraphNode> lst)
 		{
 			LinkedList<BasicBlock> stackNode = new LinkedList<BasicBlock>();
 			LinkedList<int> stackIndex = new LinkedList<int>();
 			HashSet<BasicBlock> setVisited = new HashSet<BasicBlock>();
-			stackNode.Add(root);
-			stackIndex.Add(0);
+			stackNode.AddLast(root);
+			stackIndex.AddLast(0);
 			while (!(stackNode.Count == 0))
 			{
-				BasicBlock node = stackNode.GetLast();
+				BasicBlock node = stackNode.Last.Value;
 				int index = Sharpen.Collections.RemoveLast(stackIndex);
 				setVisited.Add(node);
 				List<BasicBlock> lstSuccs = new List<BasicBlock>(node.GetSuccs());
@@ -802,15 +800,15 @@ CHILD_break: ;
 					BasicBlock succ = lstSuccs[index];
 					if (!setVisited.Contains(succ))
 					{
-						stackIndex.Add(index + 1);
-						stackNode.Add(succ);
-						stackIndex.Add(0);
+						stackIndex.AddLast(index + 1);
+						stackNode.AddLast(succ);
+						stackIndex.AddLast(0);
 						break;
 					}
 				}
 				if (index == lstSuccs.Count)
 				{
-					lst.Add(0, node);
+					lst.AddFirst(node);
 					Sharpen.Collections.RemoveLast(stackNode);
 				}
 			}

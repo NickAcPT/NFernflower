@@ -67,8 +67,8 @@ namespace JetBrainsDecompiler.Code
 		{
 			SwitchInstruction copy = (SwitchInstruction)base.Clone();
 			copy.defaultDestination = defaultDestination;
-			copy.destinations = destinations.MemberwiseClone();
-			copy.values = values.MemberwiseClone();
+			copy.destinations = (int[]) destinations.Clone();
+			copy.values = (int[]) values.Clone();
 			return copy;
 		}
 	}

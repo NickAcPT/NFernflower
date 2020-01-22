@@ -1,4 +1,6 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
+
+using System;
 using System.Collections.Generic;
 using JetBrainsDecompiler.Modules.Decompiler.Exps;
 using JetBrainsDecompiler.Util;
@@ -42,17 +44,16 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 			}
 		}
 
-		private static void AddToReversePostOrderListIterative<_T0>(DirectNode root, IList
-			<_T0> lst)
+		private static void AddToReversePostOrderListIterative(DirectNode root, LinkedList<DirectNode> lst)
 		{
 			LinkedList<DirectNode> stackNode = new LinkedList<DirectNode>();
 			LinkedList<int> stackIndex = new LinkedList<int>();
 			HashSet<DirectNode> setVisited = new HashSet<DirectNode>();
-			stackNode.Add(root);
-			stackIndex.Add(0);
+			stackNode.AddLast(root);
+			stackIndex.AddLast(0);
 			while (!(stackNode.Count == 0))
 			{
-				DirectNode node = stackNode.GetLast();
+				DirectNode node = stackNode.Last.Value;
 				int index = Sharpen.Collections.RemoveLast(stackIndex);
 				setVisited.Add(node);
 				for (; index < node.succs.Count; index++)
@@ -60,15 +61,15 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 					DirectNode succ = node.succs[index];
 					if (!setVisited.Contains(succ))
 					{
-						stackIndex.Add(index + 1);
-						stackNode.Add(succ);
-						stackIndex.Add(0);
+						stackIndex.AddLast(index + 1);
+						stackNode.AddLast(succ);
+						stackIndex.AddLast(0);
 						break;
 					}
 				}
 				if (index == node.succs.Count)
 				{
-					lst.Add(0, node);
+					lst.AddFirst(node);
 					Sharpen.Collections.RemoveLast(stackNode);
 				}
 			}
@@ -76,8 +77,13 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 
 		public virtual bool IterateExprents(DirectGraph.IExprentIterator iter)
 		{
+			return IterateExprents(iter.ProcessExprent);
+		}
+
+		public virtual bool IterateExprents(Func<Exprent, int> iter)
+		{
 			LinkedList<DirectNode> stack = new LinkedList<DirectNode>();
-			stack.Add(first);
+			stack.AddLast(first);
 			HashSet<DirectNode> setVisited = new HashSet<DirectNode>();
 			while (!(stack.Count == 0))
 			{
@@ -89,7 +95,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 				setVisited.Add(node);
 				for (int i = 0; i < node.exprents.Count; i++)
 				{
-					int res = iter.ProcessExprent(node.exprents[i]);
+					int res = iter(node.exprents[i]);
 					if (res == 1)
 					{
 						return false;

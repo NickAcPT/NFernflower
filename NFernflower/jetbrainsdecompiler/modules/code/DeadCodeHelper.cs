@@ -15,7 +15,7 @@ namespace JetBrainsDecompiler.Modules.Code
 		{
 			LinkedList<BasicBlock> stack = new LinkedList<BasicBlock>();
 			HashSet<BasicBlock> setStacked = new HashSet<BasicBlock>();
-			stack.Add(graph.GetFirst());
+			stack.AddLast(graph.GetFirst());
 			setStacked.Add(graph.GetFirst());
 			while (!(stack.Count == 0))
 			{
@@ -26,13 +26,13 @@ namespace JetBrainsDecompiler.Modules.Code
 				{
 					if (!setStacked.Contains(succ))
 					{
-						stack.Add(succ);
+						stack.AddLast(succ);
 						setStacked.Add(succ);
 					}
 				}
 			}
 			HashSet<BasicBlock> setAllBlocks = new HashSet<BasicBlock>(graph.GetBlocks());
-			setAllBlocks.RemoveAll(setStacked);
+			setAllBlocks.ExceptWith(setStacked);
 			foreach (BasicBlock block in setAllBlocks)
 			{
 				graph.RemoveBlock(block);
@@ -107,7 +107,7 @@ namespace JetBrainsDecompiler.Modules.Code
 							}
 							else
 							{
-								setCommonExceptionHandlers.RetainAll(pred.GetSuccExceptions());
+								setCommonExceptionHandlers.IntersectWith(pred.GetSuccExceptions());
 							}
 						}
 					}
@@ -130,7 +130,7 @@ namespace JetBrainsDecompiler.Modules.Code
 						List<BasicBlock> lst = range.GetProtectedRange();
 						if (lst.Count == 1 && lst[0] == block)
 						{
-							if (DecompilerContext.GetOption(IIFernflowerPreferences.Remove_Empty_Ranges))
+							if (DecompilerContext.GetOption(IFernflowerPreferences.Remove_Empty_Ranges))
 							{
 								block.RemoveSuccessorException(range.GetHandler());
 								lstRanges.RemoveAtReturningValue(i);
@@ -203,10 +203,11 @@ namespace JetBrainsDecompiler.Modules.Code
 				return true;
 			}
 			LinkedList<BasicBlock> lstNodes = new LinkedList<BasicBlock>();
-			lstNodes.Add(block);
+			lstNodes.AddLast(block);
 			while (!(lstNodes.Count == 0))
 			{
-				BasicBlock node = lstNodes.RemoveAtReturningValue(0);
+				BasicBlock node = lstNodes.First.Value;
+				lstNodes.RemoveFirst();
 				if (marked.Contains(node))
 				{
 					continue;
@@ -224,7 +225,7 @@ namespace JetBrainsDecompiler.Modules.Code
 					BasicBlock pred = node.GetPreds()[i];
 					if (pred != dom && !marked.Contains(pred))
 					{
-						lstNodes.Add(pred);
+						lstNodes.AddLast(pred);
 					}
 				}
 				for (int i = 0; i < node.GetPredExceptions().Count; i++)
@@ -232,7 +233,7 @@ namespace JetBrainsDecompiler.Modules.Code
 					BasicBlock pred = node.GetPredExceptions()[i];
 					if (pred != dom && !marked.Contains(pred))
 					{
-						lstNodes.Add(pred);
+						lstNodes.AddLast(pred);
 					}
 				}
 			}
@@ -274,7 +275,7 @@ namespace JetBrainsDecompiler.Modules.Code
 					{
 						Sharpen.Collections.AddAll(setPreds, block.GetPreds());
 					}
-					setPreds.RemoveAll(range.GetProtectedRange());
+					setPreds.ExceptWith(range.GetProtectedRange());
 					if (setPreds.Count != 1)
 					{
 						continue;
@@ -317,7 +318,7 @@ namespace JetBrainsDecompiler.Modules.Code
 					{
 						Sharpen.Collections.AddAll(setSuccs, block.GetSuccs());
 					}
-					setSuccs.RemoveAll(range.GetProtectedRange());
+					setSuccs.ExceptWith(range.GetProtectedRange());
 					if (setSuccs.Count != 1)
 					{
 						continue;
@@ -476,12 +477,12 @@ namespace JetBrainsDecompiler.Modules.Code
 								}
 								else
 								{
-									setPredHandlersIntersection.RetainAll(pred.GetSuccExceptions());
+									setPredHandlersIntersection.IntersectWith(pred.GetSuccExceptions());
 								}
 								Sharpen.Collections.AddAll(setPredHandlersUnion, pred.GetSuccExceptions());
 							}
 							// add exception ranges from predecessors
-							setPredHandlersIntersection.RemoveAll(block.GetSuccExceptions());
+							setPredHandlersIntersection.ExceptWith(block.GetSuccExceptions());
 							BasicBlock predecessor = block.GetPreds()[0];
 							foreach (BasicBlock handler in setPredHandlersIntersection)
 							{
@@ -492,7 +493,7 @@ namespace JetBrainsDecompiler.Modules.Code
 							// remove redundant ranges
 							HashSet<BasicBlock> setRangesToBeRemoved = new HashSet<BasicBlock>(block.GetSuccExceptions
 								());
-							setRangesToBeRemoved.RemoveAll(setPredHandlersUnion);
+							setRangesToBeRemoved.ExceptWith(setPredHandlersUnion);
 							foreach (BasicBlock handler in setRangesToBeRemoved)
 							{
 								ExceptionRangeCFG range = graph.GetExceptionRange(handler, block);

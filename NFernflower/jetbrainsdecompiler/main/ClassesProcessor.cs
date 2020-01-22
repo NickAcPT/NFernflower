@@ -22,18 +22,18 @@ namespace JetBrainsDecompiler.Main
 
 		private readonly StructContext context;
 
-		private readonly IDictionary<string, ClassesProcessor.ClassNode> mapRootClasses = 
+		private readonly Dictionary<string, ClassesProcessor.ClassNode> mapRootClasses = 
 			new Dictionary<string, ClassesProcessor.ClassNode>();
 
 		private class Inner
 		{
-			private string simpleName;
+			public string simpleName { get; set; }
 
-			private int type;
+			public int type { get; set; }
 
-			private int accessFlags;
+			public int accessFlags { get; set; }
 
-			private static bool Equal(ClassesProcessor.Inner o1, ClassesProcessor.Inner o2)
+			public static bool Equal(ClassesProcessor.Inner o1, ClassesProcessor.Inner o2)
 			{
 				return o1.type == o2.type && o1.accessFlags == o2.accessFlags && InterpreterUtil.
 					EqualObjects(o1.simpleName, o2.simpleName);
@@ -45,18 +45,18 @@ namespace JetBrainsDecompiler.Main
 			this.context = context;
 		}
 
-		public virtual void LoadClasses(IIIdentifierRenamer renamer)
+		public virtual void LoadClasses(IIdentifierRenamer renamer)
 		{
-			IDictionary<string, ClassesProcessor.Inner> mapInnerClasses = new Dictionary<string
+			Dictionary<string, ClassesProcessor.Inner> mapInnerClasses = new Dictionary<string
 				, ClassesProcessor.Inner>();
-			IDictionary<string, HashSet<string>> mapNestedClassReferences = new Dictionary<string
+			Dictionary<string, HashSet<string>> mapNestedClassReferences = new Dictionary<string
 				, HashSet<string>>();
-			IDictionary<string, HashSet<string>> mapEnclosingClassReferences = new Dictionary
+			Dictionary<string, HashSet<string>> mapEnclosingClassReferences = new Dictionary
 				<string, HashSet<string>>();
-			IDictionary<string, string> mapNewSimpleNames = new Dictionary<string, string>();
-			bool bDecompileInner = DecompilerContext.GetOption(IIFernflowerPreferences.Decompile_Inner
+			Dictionary<string, string> mapNewSimpleNames = new Dictionary<string, string>();
+			bool bDecompileInner = DecompilerContext.GetOption(IFernflowerPreferences.Decompile_Inner
 				);
-			bool verifyAnonymousClasses = DecompilerContext.GetOption(IIFernflowerPreferences
+			bool verifyAnonymousClasses = DecompilerContext.GetOption(IFernflowerPreferences
 				.Verify_Anonymous_Classes);
 			// create class nodes
 			foreach (StructClass cl in context.GetClasses().Values)
@@ -145,7 +145,7 @@ namespace JetBrainsDecompiler.Main
 					{
 						HashSet<string> setVisited = new HashSet<string>();
 						LinkedList<string> stack = new LinkedList<string>();
-						stack.Add(ent.Key);
+						stack.AddLast(ent.Key);
 						setVisited.Add(ent.Key);
 						while (!(stack.Count == 0))
 						{
@@ -218,7 +218,7 @@ namespace JetBrainsDecompiler.Main
 									nestedNode.parent = superNode;
 									Sharpen.Collections.AddAll(nestedNode.enclosingClasses, mapEnclosingClassReferences
 										.GetOrNull(nestedClass));
-									stack.Add(nestedClass);
+									stack.AddLast(nestedClass);
 								}
 							}
 						}
@@ -380,15 +380,15 @@ namespace JetBrainsDecompiler.Main
 				}
 				int offsetLines = buffer.CountLines();
 				buffer.Append(classBuffer);
-				if (DecompilerContext.GetOption(IIFernflowerPreferences.Bytecode_Source_Mapping))
+				if (DecompilerContext.GetOption(IFernflowerPreferences.Bytecode_Source_Mapping))
 				{
 					BytecodeSourceMapper mapper = DecompilerContext.GetBytecodeSourceMapper();
 					mapper.AddTotalOffset(offsetLines);
-					if (DecompilerContext.GetOption(IIFernflowerPreferences.Dump_Original_Lines))
+					if (DecompilerContext.GetOption(IFernflowerPreferences.Dump_Original_Lines))
 					{
 						buffer.DumpOriginalLineNumbers(mapper.GetOriginalLinesMapping());
 					}
-					if (DecompilerContext.GetOption(IIFernflowerPreferences.Unit_Test_Mode))
+					if (DecompilerContext.GetOption(IFernflowerPreferences.Unit_Test_Mode))
 					{
 						buffer.AppendLineSeparator();
 						mapper.DumpMapping(buffer, true);
@@ -441,7 +441,7 @@ namespace JetBrainsDecompiler.Main
 			}
 		}
 
-		public virtual IDictionary<string, ClassesProcessor.ClassNode> GetMapRootClasses(
+		public virtual Dictionary<string, ClassesProcessor.ClassNode> GetMapRootClasses(
 			)
 		{
 			return mapRootClasses;
@@ -467,13 +467,13 @@ namespace JetBrainsDecompiler.Main
 
 			public readonly StructClass classStruct;
 
-			private ClassWrapper wrapper;
+			internal ClassWrapper wrapper { get; set; }
 
 			public string enclosingMethod;
 
 			public InvocationExprent superInvocation;
 
-			public readonly IDictionary<string, VarVersionPair> mapFieldsToVars = new Dictionary
+			public readonly Dictionary<string, VarVersionPair> mapFieldsToVars = new Dictionary
 				<string, VarVersionPair>();
 
 			public VarType anonymousClassType;

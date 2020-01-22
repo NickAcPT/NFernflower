@@ -19,7 +19,7 @@ namespace JetBrainsDecompiler.Util
 		{
 		}
 
-		public override object Clone()
+		public virtual object Clone()
 		{
 			ListStack<T> copy = new ListStack<T>(this);
 			copy.pointer = this.pointer;
@@ -42,7 +42,7 @@ namespace JetBrainsDecompiler.Util
 
 		public virtual T Pop(int count)
 		{
-			T o = null;
+			T o = default(T);
 			for (int i = count; i > 0; i--)
 			{
 				o = this.Pop();
@@ -76,7 +76,7 @@ namespace JetBrainsDecompiler.Util
 			pointer++;
 		}
 
-		public override void Clear()
+		public void Clear()
 		{
 			base.Clear();
 			pointer = 0;

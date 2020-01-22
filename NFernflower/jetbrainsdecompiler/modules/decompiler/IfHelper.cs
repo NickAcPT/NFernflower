@@ -1,6 +1,7 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrainsDecompiler.Modules.Decompiler.Exps;
 using JetBrainsDecompiler.Modules.Decompiler.Stats;
 using Sharpen;
@@ -19,7 +20,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			return res;
 		}
 
-		private static bool MergeAllIfsRec<_T0>(Statement stat, HashSet<_T0> setReorderedIfs
+		private static bool MergeAllIfsRec(Statement stat, HashSet<int> setReorderedIfs
 			)
 		{
 			bool res = false;
@@ -47,7 +48,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			return res;
 		}
 
-		public static bool MergeIfs<_T0>(Statement statement, HashSet<_T0> setReorderedIfs
+		public static bool MergeIfs(Statement statement, HashSet<int> setReorderedIfs
 			)
 		{
 			if (statement.type != Statement.Type_If && statement.type != Statement.Type_Sequence)

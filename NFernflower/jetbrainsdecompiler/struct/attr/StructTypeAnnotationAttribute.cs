@@ -1,10 +1,11 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System;
 using System.Collections.Generic;
-using Java.IO;
+using System.IO;
 using JetBrainsDecompiler.Modules.Decompiler.Exps;
 using JetBrainsDecompiler.Struct.Consts;
 using JetBrainsDecompiler.Util;
+using ObjectWeb.Misc.Java.IO;
 using Sharpen;
 
 namespace JetBrainsDecompiler.Struct.Attr
@@ -14,7 +15,7 @@ namespace JetBrainsDecompiler.Struct.Attr
 		private List<TypeAnnotation> annotations = new System.Collections.Generic.List<TypeAnnotation
 			>();
 
-		/// <exception cref="System.IO.IOException"/>
+		/// <exception cref="IOException"/>
 		public override void InitContent(DataInputFullStream data, ConstantPool pool)
 		{
 			int len = data.ReadUnsignedShort();
@@ -32,7 +33,7 @@ namespace JetBrainsDecompiler.Struct.Attr
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"/>
+		/// <exception cref="IOException"/>
 		private static TypeAnnotation Parse(DataInputStream data, ConstantPool pool)
 		{
 			int targetType = data.ReadUnsignedByte();

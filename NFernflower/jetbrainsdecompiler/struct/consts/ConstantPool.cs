@@ -1,13 +1,15 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
-using Java.IO;
 using Java.Util;
 using JetBrainsDecompiler.Code;
 using JetBrainsDecompiler.Main;
 using JetBrainsDecompiler.Modules.Renamer;
 using JetBrainsDecompiler.Struct.Gen;
 using JetBrainsDecompiler.Util;
+using NFernflower.Java.Util;
+using ObjectWeb.Misc.Java.IO;
 using Sharpen;
 
 namespace JetBrainsDecompiler.Struct.Consts
@@ -22,7 +24,7 @@ namespace JetBrainsDecompiler.Struct.Consts
 
 		private readonly PoolInterceptor interceptor;
 
-		/// <exception cref="System.IO.IOException"/>
+		/// <exception cref="IOException"/>
 		public ConstantPool(DataInputStream @in)
 		{
 			int size = @in.ReadUnsignedShort();
@@ -45,7 +47,7 @@ namespace JetBrainsDecompiler.Struct.Consts
 
 					case ICodeConstants.CONSTANT_Integer:
 					{
-						pool.Add(new PrimitiveConstant(ICodeConstants.CONSTANT_Integer, int.Parse(@in.ReadInt
+						pool.Add(new PrimitiveConstant(ICodeConstants.CONSTANT_Integer, (@in.ReadInt
 							())));
 						break;
 					}
@@ -119,7 +121,7 @@ namespace JetBrainsDecompiler.Struct.Consts
 			interceptor = DecompilerContext.GetPoolInterceptor();
 		}
 
-		/// <exception cref="System.IO.IOException"/>
+		/// <exception cref="IOException"/>
 		public static void SkipPool(DataInputFullStream @in)
 		{
 			int size = @in.ReadUnsignedShort();

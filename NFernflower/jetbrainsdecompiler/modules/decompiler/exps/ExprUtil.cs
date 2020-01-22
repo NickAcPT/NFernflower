@@ -1,6 +1,7 @@
 // Copyright 2000-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrainsDecompiler.Code;
 using JetBrainsDecompiler.Main;
 using JetBrainsDecompiler.Main.Extern;
@@ -33,7 +34,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 					descriptor);
 				if (methodWrapper == null)
 				{
-					if (DecompilerContext.GetOption(IIFernflowerPreferences.Ignore_Invalid_Bytecode))
+					if (DecompilerContext.GetOption(IFernflowerPreferences.Ignore_Invalid_Bytecode))
 					{
 						return null;
 					}
@@ -46,7 +47,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 				 (node.access & ICodeConstants.Acc_Static) == 0)
 			{
 				// non-static member class
-				mask = new List<VarVersionPair>(Java.Util.Collections.NCopies(parameters, null));
+				mask = new List<VarVersionPair>(Enumerable.Repeat<VarVersionPair>(null, parameters));
 				mask[0] = new VarVersionPair(-1, 0);
 			}
 			return mask;

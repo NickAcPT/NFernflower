@@ -12,7 +12,7 @@ namespace JetBrainsDecompiler.Struct
 	{
 		protected internal int accessFlags;
 
-		protected internal IDictionary<string, StructGeneralAttribute> attributes;
+		protected internal Dictionary<string, StructGeneralAttribute> attributes;
 
 		public virtual int GetAccessFlags()
 		{
@@ -44,11 +44,11 @@ namespace JetBrainsDecompiler.Struct
 		}
 
 		/// <exception cref="System.IO.IOException"/>
-		protected internal virtual IDictionary<string, StructGeneralAttribute> ReadAttributes
+		protected internal virtual Dictionary<string, StructGeneralAttribute> ReadAttributes
 			(DataInputFullStream @in, ConstantPool pool)
 		{
 			int length = @in.ReadUnsignedShort();
-			IDictionary<string, StructGeneralAttribute> attributes = new Dictionary<string, StructGeneralAttribute
+			Dictionary<string, StructGeneralAttribute> attributes = new Dictionary<string, StructGeneralAttribute
 				>(length);
 			for (int i = 0; i < length; i++)
 			{

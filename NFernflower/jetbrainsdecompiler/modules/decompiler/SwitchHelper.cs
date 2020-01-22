@@ -19,7 +19,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			if (IsEnumArray(value))
 			{
 				List<List<Exprent>> caseValues = switchStatement.GetCaseValues();
-				IDictionary<Exprent, Exprent> mapping = new Dictionary<Exprent, Exprent>(caseValues
+				Dictionary<Exprent, Exprent> mapping = new Dictionary<Exprent, Exprent>(caseValues
 					.Count);
 				ArrayExprent array = (ArrayExprent)value;
 				FieldExprent arrayField = (FieldExprent)array.GetArray();
@@ -32,19 +32,19 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 					if (wrapper != null && wrapper.root != null)
 					{
 						wrapper.GetOrBuildGraph().IterateExprents((Exprent exprent) => 						{
-							if (exprent is AssignmentExprent)
-							{
-								AssignmentExprent assignment = (AssignmentExprent)exprent;
-								Exprent left = assignment.GetLeft();
-								if (left.type == Exprent.Exprent_Array && ((ArrayExprent)left).GetArray().Equals(
-									arrayField))
+								if (exprent is AssignmentExprent)
 								{
-									Sharpen.Collections.Put(mapping, assignment.GetRight(), ((InvocationExprent)((ArrayExprent
-										)left).GetIndex()).GetInstance());
+									AssignmentExprent assignment = (AssignmentExprent)exprent;
+									Exprent left = assignment.GetLeft();
+									if (left.type == Exprent.Exprent_Array && ((ArrayExprent)left).GetArray().Equals(
+										    arrayField))
+									{
+										Sharpen.Collections.Put(mapping, assignment.GetRight(), ((InvocationExprent)((ArrayExprent
+											)left).GetIndex()).GetInstance());
+									}
 								}
+								return 0;
 							}
-							return 0;
-						}
 );
 					}
 				}

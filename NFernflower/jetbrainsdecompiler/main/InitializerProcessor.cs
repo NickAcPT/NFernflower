@@ -27,7 +27,7 @@ namespace JetBrainsDecompiler.Main
 			// required e.g. if anonymous class is being decompiled as a standard one.
 			// This can happen if InnerClasses attributes are erased
 			LiftConstructor(wrapper);
-			if (DecompilerContext.GetOption(IIFernflowerPreferences.Hide_Empty_Super))
+			if (DecompilerContext.GetOption(IFernflowerPreferences.Hide_Empty_Super))
 			{
 				HideEmptySuper(wrapper);
 			}

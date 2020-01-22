@@ -3,7 +3,7 @@ using Sharpen;
 
 namespace JetBrainsDecompiler.Struct.Match
 {
-	public abstract class IIMatchable
+	public abstract class IMatchable
 	{
 		[System.Serializable]
 		public sealed class MatchProperties : Sharpen.EnumBase
@@ -82,7 +82,7 @@ namespace JetBrainsDecompiler.Struct.Match
 			}
 		}
 
-		public abstract IIMatchable FindObject(MatchNode matchNode, int index);
+		public abstract IMatchable FindObject(MatchNode matchNode, int index);
 
 		public abstract bool Match(MatchNode matchNode, MatchEngine engine);
 	}

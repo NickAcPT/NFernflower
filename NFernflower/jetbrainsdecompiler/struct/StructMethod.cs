@@ -5,6 +5,7 @@ using JetBrainsDecompiler.Struct.Attr;
 using JetBrainsDecompiler.Struct.Consts;
 using JetBrainsDecompiler.Util;
 using Sharpen;
+using static JetBrainsDecompiler.Code.ICodeConstants;
 
 namespace JetBrainsDecompiler.Struct
 {
@@ -39,7 +40,7 @@ namespace JetBrainsDecompiler.Struct
 
 		private bool expanded = false;
 
-		private IDictionary<string, StructGeneralAttribute> codeAttributes;
+		private Dictionary<string, StructGeneralAttribute> codeAttributes;
 
 		/// <exception cref="System.IO.IOException"/>
 		public StructMethod(DataInputFullStream @in, StructClass clStruct)

@@ -1,6 +1,7 @@
 // Copyright 2000-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using JetBrainsDecompiler.Code;
 using JetBrainsDecompiler.Code.Cfg;
@@ -27,7 +28,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 
 		public const string Null_Type_String = "<null>";
 
-		private static readonly IDictionary<int, int> mapConsts = new Dictionary<int, int
+		private static readonly Dictionary<int, int> mapConsts = new Dictionary<int, int
 			>();
 
 		static ExprProcessor()
@@ -130,16 +131,16 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 					setFinallyLongRangeEntryPaths.Add(finwrap.source + "##" + finwrap.entry);
 				}
 			}
-			IDictionary<string, VarExprent> mapCatch = new Dictionary<string, VarExprent>();
+			Dictionary<string, VarExprent> mapCatch = new Dictionary<string, VarExprent>();
 			CollectCatchVars(root, flatthelper, mapCatch);
-			IDictionary<DirectNode, IDictionary<string, PrimitiveExprsList>> mapData = new Dictionary
-				<DirectNode, IDictionary<string, PrimitiveExprsList>>();
+			Dictionary<DirectNode, Dictionary<string, PrimitiveExprsList>> mapData = new Dictionary
+				<DirectNode, Dictionary<string, PrimitiveExprsList>>();
 			LinkedList<DirectNode> stack = new LinkedList<DirectNode>();
 			LinkedList<LinkedList<string>> stackEntryPoint = new LinkedList<LinkedList<string
 				>>();
-			stack.Add(dgraph.first);
-			stackEntryPoint.Add(new LinkedList<string>());
-			IDictionary<string, PrimitiveExprsList> map = new Dictionary<string, PrimitiveExprsList
+			stack.AddLast(dgraph.first);
+			stackEntryPoint.AddLast(new LinkedList<string>());
+			Dictionary<string, PrimitiveExprsList> map = new Dictionary<string, PrimitiveExprsList
 				>();
 			Sharpen.Collections.Put(map, null, new PrimitiveExprsList());
 			Sharpen.Collections.Put(mapData, dgraph.first, map);
@@ -162,8 +163,8 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 					ProcessBlock(block, data, cl);
 					block.SetExprents(data.GetLstExprents());
 				}
-				string currentEntrypoint = (entrypoints.Count == 0) ? null : entrypoints.GetLast(
-					);
+				string currentEntrypoint = (entrypoints.Count == 0) ? null : entrypoints.Last
+					.Value;
 				foreach (DirectNode nd in node.succs)
 				{
 					bool isSuccessor = true;
@@ -184,7 +185,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 					}
 					if (isSuccessor)
 					{
-						IDictionary<string, PrimitiveExprsList> mapSucc = mapData.ComputeIfAbsent(nd, (DirectNode
+						Dictionary<string, PrimitiveExprsList> mapSucc = mapData.ComputeIfAbsent(nd, (DirectNode
 							 k) => new Dictionary<string, PrimitiveExprsList>());
 						LinkedList<string> ndentrypoints = new LinkedList<string>(entrypoints);
 						if (setFinallyLongRangeEntryPaths.Contains(node.id + "##" + nd.id))
@@ -199,7 +200,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 						// currentEntrypoint should
 						// not be null at this point
 						// handling of entry point loops
-						int succ_entry_index = ndentrypoints.IndexOf(nd.id);
+						int succ_entry_index = ndentrypoints.ToList().IndexOf(nd.id);
 						if (succ_entry_index >= 0)
 						{
 							// we are in a loop (e.g. continue in a finally block), drop all entry points in the list beginning with succ_entry_index
@@ -213,8 +214,8 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 						if (!mapSucc.ContainsKey(ndentrykey))
 						{
 							Sharpen.Collections.Put(mapSucc, ndentrykey, CopyVarExprents(data.CopyStack()));
-							stack.Add(nd);
-							stackEntryPoint.Add(ndentrypoints);
+							stack.AddLast(nd);
+							stackEntryPoint.AddLast(ndentrypoints);
 						}
 					}
 				}
@@ -257,7 +258,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 		}
 
 		private static void CollectCatchVars(Statement stat, FlattenStatementsHelper flatthelper
-			, IDictionary<string, VarExprent> map)
+			, Dictionary<string, VarExprent> map)
 		{
 			List<VarExprent> lst = null;
 			if (stat.type == Statement.Type_Catchall)
@@ -618,7 +619,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 
 					case opc_arraylength:
 					{
-						PushEx(stack, exprlist, new FunctionExprent(mapConsts.GetOrNullable(instr.opcode)
+						PushEx(stack, exprlist, new FunctionExprent((int) mapConsts.GetOrNullable(instr.opcode)
 							, stack, bytecode_offsets));
 						break;
 					}
@@ -852,14 +853,14 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 					);
 				varnew.SetStack(true);
 				exprlist.Add(new AssignmentExprent(varnew, varex, null));
-				lst.Add(0, (VarExprent)varnew.Copy());
+				lst.AddFirst((VarExprent)varnew.Copy());
 			}
-			Exprent exprent = lst[lst.Count + copyoffset].Copy();
+			Exprent exprent = lst.ToList()[lst.Count + copyoffset].Copy();
 			VarExprent var = new VarExprent(@base + offset, exprent.GetExprType(), varProcessor
 				);
 			var.SetStack(true);
 			exprlist.Add(new AssignmentExprent(var, exprent, null));
-			lst.Add(0, (VarExprent)var.Copy());
+			lst.AddFirst((VarExprent)var.Copy());
 			foreach (VarExprent expr in lst)
 			{
 				stack.Push(expr);
@@ -1016,9 +1017,8 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			return res;
 		}
 
-		public static TextBuffer ListToJava<_T0>(List<_T0> lst, int indent, BytecodeMappingTracer
+		public static TextBuffer ListToJava(List<Exprent> lst, int indent, BytecodeMappingTracer
 			 tracer)
-			where _T0 : Exprent
 		{
 			if (lst == null || (lst.Count == 0))
 			{

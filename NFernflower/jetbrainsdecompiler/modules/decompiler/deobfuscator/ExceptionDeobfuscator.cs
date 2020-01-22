@@ -1,5 +1,6 @@
 // Copyright 2000-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System.Collections.Generic;
+using System.Linq;
 using JetBrainsDecompiler.Code;
 using JetBrainsDecompiler.Code.Cfg;
 using JetBrainsDecompiler.Main;
@@ -14,15 +15,15 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Deobfuscator
 	{
 		private class Range
 		{
-			private readonly BasicBlock handler;
+			internal readonly BasicBlock handler;
 
-			private readonly string uniqueStr;
+			internal readonly string uniqueStr;
 
-			private readonly HashSet<BasicBlock> protectedRange;
+			internal readonly HashSet<BasicBlock> protectedRange;
 
-			private readonly ExceptionRangeCFG rangeCFG;
+			internal readonly ExceptionRangeCFG rangeCFG;
 
-			private Range(BasicBlock handler, string uniqueStr, HashSet<BasicBlock> protectedRange
+			internal Range(BasicBlock handler, string uniqueStr, HashSet<BasicBlock> protectedRange
 				, ExceptionRangeCFG rangeCFG)
 			{
 				this.handler = handler;
@@ -80,15 +81,15 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Deobfuscator
 									HashSet<BasicBlock> setrange_super = new HashSet<BasicBlock>(range_super.protectedRange
 										);
 									if (!setrange.Contains(range_super.handler) && !setrange_super.Contains(handler) 
-										&& (range_super.uniqueStr == null || setrange_super.ContainsAll(setrange)))
+										&& (range_super.uniqueStr == null || setrange.All(setrange_super.Contains)))
 									{
 										if (range_super.uniqueStr == null)
 										{
-											setrange_super.RetainAll(setrange);
+											setrange_super.IntersectWith(setrange);
 										}
 										else
 										{
-											setrange_super.RemoveAll(setrange);
+											setrange_super.ExceptWith(setrange);
 										}
 										if (!(setrange_super.Count == 0))
 										{
@@ -250,14 +251,14 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Deobfuscator
 				this.graph = graph;
 			}
 
-			public List<IIGraphNode> GetReversePostOrderList()
+			public LinkedList<IGraphNode> GetReversePostOrderList()
 			{
 				return graph.GetReversePostOrder();
 			}
 
-			public HashSet<IIGraphNode> GetRoots()
+			public HashSet<IGraphNode> GetRoots()
 			{
-				return new HashSet<BasicBlock>(System.Linq.Enumerable.ToList(new [] {graph.GetFirst
+				return new HashSet<IGraphNode>(System.Linq.Enumerable.ToList(new [] {graph.GetFirst
 					()}));
 			}
 
@@ -284,7 +285,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Deobfuscator
 					{
 						if (!setVisited.Contains(succ))
 						{
-							stack.Add(succ);
+							stack.AddLast(succ);
 						}
 					}
 				}
@@ -294,7 +295,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Deobfuscator
 
 		public static bool HasObfuscatedExceptions(ControlFlowGraph graph)
 		{
-			IDictionary<BasicBlock, HashSet<BasicBlock>> mapRanges = new Dictionary<BasicBlock
+			Dictionary<BasicBlock, HashSet<BasicBlock>> mapRanges = new Dictionary<BasicBlock
 				, HashSet<BasicBlock>>();
 			foreach (ExceptionRangeCFG range in graph.GetExceptions())
 			{
@@ -307,7 +308,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Deobfuscator
 				foreach (BasicBlock block in ent.Value)
 				{
 					HashSet<BasicBlock> setTemp = new HashSet<BasicBlock>(block.GetPreds());
-					setTemp.RemoveAll(ent.Value);
+					setTemp.ExceptWith(ent.Value);
 					if (!(setTemp.Count == 0))
 					{
 						setEntries.Add(block);
@@ -364,14 +365,14 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Deobfuscator
 				this.graph = graph;
 			}
 
-			public List<IIGraphNode> GetReversePostOrderList()
+			public LinkedList<IGraphNode> GetReversePostOrderList()
 			{
 				return graph.GetReversePostOrder();
 			}
 
-			public HashSet<IIGraphNode> GetRoots()
+			public HashSet<IGraphNode> GetRoots()
 			{
-				return new HashSet<BasicBlock>(System.Linq.Enumerable.ToList(new [] {graph.GetFirst
+				return new HashSet<IGraphNode>(System.Linq.Enumerable.ToList(new [] {graph.GetFirst
 					()}));
 			}
 
@@ -385,7 +386,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Deobfuscator
 			foreach (BasicBlock block in range.GetProtectedRange())
 			{
 				HashSet<BasicBlock> setPreds = new HashSet<BasicBlock>(block.GetPreds());
-				setPreds.RemoveAll(setRange);
+				setPreds.ExceptWith(setRange);
 				if (!(setPreds.Count == 0))
 				{
 					setEntries.Add(block);
@@ -409,7 +410,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Deobfuscator
 						(), range.GetExceptionTypes());
 					graph.GetExceptions().Add(subRange);
 					// shrink the original range
-					range.GetProtectedRange().RemoveAll(lstSubrangeBlocks);
+					lstSubrangeBlocks.ForEach(block => range.GetProtectedRange().Remove(block));
 					return true;
 				}
 				else
@@ -425,7 +426,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Deobfuscator
 		public static void InsertDummyExceptionHandlerBlocks(ControlFlowGraph graph, int 
 			bytecode_version)
 		{
-			IDictionary<BasicBlock, HashSet<ExceptionRangeCFG>> mapRanges = new Dictionary<BasicBlock
+			Dictionary<BasicBlock, HashSet<ExceptionRangeCFG>> mapRanges = new Dictionary<BasicBlock
 				, HashSet<ExceptionRangeCFG>>();
 			foreach (ExceptionRangeCFG range in graph.GetExceptions())
 			{
@@ -454,7 +455,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Deobfuscator
 					// only exception predecessors from this range considered
 					List<BasicBlock> lstPredExceptions = new List<BasicBlock>(handler.GetPredExceptions
 						());
-					lstPredExceptions.RetainAll(range.GetProtectedRange());
+					lstPredExceptions = lstPredExceptions.Intersect(range.GetProtectedRange()).ToList();
 					// replace predecessors
 					foreach (BasicBlock pred in lstPredExceptions)
 					{
@@ -467,7 +468,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Deobfuscator
 						());
 					foreach (BasicBlock pred in lstPredExceptions)
 					{
-						commonHandlers.RetainAll(pred.GetSuccExceptions());
+						commonHandlers.IntersectWith(pred.GetSuccExceptions());
 					}
 					// TODO: more sanity checks?
 					foreach (BasicBlock commonHandler in commonHandlers)

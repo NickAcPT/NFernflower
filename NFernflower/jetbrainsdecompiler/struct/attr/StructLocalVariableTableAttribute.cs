@@ -1,7 +1,7 @@
 // Copyright 2000-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System.Collections.Generic;
+using System.Linq;
 using Java.Util;
-using Java.Util.Stream;
 using JetBrainsDecompiler.Struct.Consts;
 using JetBrainsDecompiler.Util;
 using Sharpen;
@@ -56,36 +56,35 @@ namespace JetBrainsDecompiler.Struct.Attr
 
 		public virtual string GetName(int index, int visibleOffset)
 		{
-			return MatchingVars(index, visibleOffset).Map((StructLocalVariableTableAttribute.LocalVariable
-				 v) => v.name).FindFirst().OrElse(null);
+			return MatchingVars(index, visibleOffset).Select((StructLocalVariableTableAttribute.LocalVariable
+				 v) => v.name).FirstOrDefault();
 		}
 
-		public virtual string GetDescriptor(int index, int visibleOffset)
+		public virtual string GetDescriptor(int? index, int visibleOffset)
 		{
-			return MatchingVars(index, visibleOffset).Map((StructLocalVariableTableAttribute.LocalVariable
-				 v) => v.descriptor).FindFirst().OrElse(null);
+			return MatchingVars(index, visibleOffset).Select((StructLocalVariableTableAttribute.LocalVariable
+				v) => v.descriptor).FirstOrDefault();
 		}
 
-		private IStream<StructLocalVariableTableAttribute.LocalVariable> MatchingVars(int
+		private IEnumerable<StructLocalVariableTableAttribute.LocalVariable> MatchingVars(int?
 			 index, int visibleOffset)
 		{
-			return localVariables.Stream().Filter((StructLocalVariableTableAttribute.LocalVariable
+			return localVariables.Where((StructLocalVariableTableAttribute.LocalVariable
 				 v) => v.index == index && (visibleOffset >= v.start_pc && visibleOffset < v.start_pc
 				 + v.length));
 		}
 
 		public virtual bool ContainsName(string name)
 		{
-			return localVariables.Stream().AnyMatch((StructLocalVariableTableAttribute.LocalVariable
-				 v) => Objects.Equals(v.name, name));
+			return localVariables.Any((StructLocalVariableTableAttribute.LocalVariable
+				 v) => v.name.Equals(name));
 		}
 
-		public virtual IDictionary<int, string> GetMapParamNames()
+		public virtual Dictionary<int, string> GetMapParamNames()
 		{
-			return localVariables.Stream().Filter((StructLocalVariableTableAttribute.LocalVariable
-				 v) => v.start_pc == 0).Collect(Collectors.ToMap((StructLocalVariableTableAttribute.LocalVariable
-				 v) => v.index, (StructLocalVariableTableAttribute.LocalVariable v) => v.name, (
-				string n1, string n2) => n2));
+			return localVariables.Where((StructLocalVariableTableAttribute.LocalVariable
+				 v) => v.start_pc == 0).ToDictionary((StructLocalVariableTableAttribute.LocalVariable
+				 v) => v.index, (StructLocalVariableTableAttribute.LocalVariable v) => v.name);
 		}
 
 		private class LocalVariable
@@ -100,7 +99,7 @@ namespace JetBrainsDecompiler.Struct.Attr
 
 			internal readonly int index;
 
-			private LocalVariable(int start_pc, int length, string name, string descriptor, int
+			internal LocalVariable(int start_pc, int length, string name, string descriptor, int
 				 index)
 			{
 				this.start_pc = start_pc;

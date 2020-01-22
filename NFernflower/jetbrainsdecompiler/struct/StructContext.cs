@@ -1,10 +1,9 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System.Collections.Generic;
 using System.IO;
-using Java.IO;
+using ICSharpCode.SharpZipLib.Zip;
 using Java.Util;
 using Java.Util.Jar;
-using Java.Util.Zip;
 using JetBrainsDecompiler.Main;
 using JetBrainsDecompiler.Main.Extern;
 using JetBrainsDecompiler.Struct.Lazy;
@@ -21,10 +20,10 @@ namespace JetBrainsDecompiler.Struct
 
 		private readonly LazyLoader loader;
 
-		private readonly IDictionary<string, ContextUnit> units = new Dictionary<string, 
+		private readonly Dictionary<string, ContextUnit> units = new Dictionary<string, 
 			ContextUnit>();
 
-		private readonly IDictionary<string, StructClass> classes = new Dictionary<string
+		private readonly Dictionary<string, StructClass> classes = new Dictionary<string
 			, StructClass>();
 
 		public StructContext(IIResultSaver saver, IIDecompiledData decompiledData, LazyLoader
@@ -72,24 +71,25 @@ namespace JetBrainsDecompiler.Struct
 			}
 		}
 
-		public virtual void AddSpace(File file, bool isOwn)
+		public virtual void AddSpace(FileSystemInfo file, bool isOwn)
 		{
 			AddSpace(string.Empty, file, isOwn, 0);
 		}
 
-		private void AddSpace(string path, File file, bool isOwn, int level)
+		private void AddSpace(string path, FileSystemInfo file, bool isOwn, int level)
 		{
-			if (file.IsDirectory())
+			if (file is DirectoryInfo dirInfo)
 			{
 				if (level == 1)
 				{
-					path += file.GetName();
+					path += dirInfo.Name;
 				}
 				else if (level > 1)
 				{
-					path += "/" + file.GetName();
+					path += "/" + dirInfo.Name;
 				}
-				File[] files = file.ListFiles();
+
+				FileInfo[] files = dirInfo.GetFiles();
 				if (files != null)
 				{
 					for (int i = files.Length - 1; i >= 0; i--)
@@ -100,7 +100,7 @@ namespace JetBrainsDecompiler.Struct
 			}
 			else
 			{
-				string filename = file.GetName();
+				string filename = file.Name;
 				bool isArchive = false;
 				try
 				{
@@ -135,13 +135,13 @@ namespace JetBrainsDecompiler.Struct
 				{
 					try
 					{
-						using (DataInputFullStream @in = loader.GetClassStream(file.GetAbsolutePath(), null
+						using (DataInputFullStream @in = loader.GetClassStream(file.FullName, null
 							))
 						{
 							StructClass cl = new StructClass(@in, isOwn, loader);
 							Sharpen.Collections.Put(classes, cl.qualifiedName, cl);
 							unit.AddClass(cl, filename);
-							loader.AddClassLink(cl.qualifiedName, new LazyLoader.Link(file.GetAbsolutePath(), 
+							loader.AddClassLink(cl.qualifiedName, new LazyLoader.Link(file.FullName, 
 								null));
 						}
 					}
@@ -153,33 +153,31 @@ namespace JetBrainsDecompiler.Struct
 				}
 				else
 				{
-					unit.AddOtherEntry(file.GetAbsolutePath(), filename);
+					unit.AddOtherEntry(file.FullName, filename);
 				}
 			}
 		}
 
 		/// <exception cref="System.IO.IOException"/>
-		private void AddArchive(string path, File file, int type, bool isOwn)
+		private void AddArchive(string path, FileSystemInfo file, int type, bool isOwn)
 		{
-			using (ZipFile archive = type == ContextUnit.Type_Jar ? new JarFile(file) : new ZipFile
-				(file))
+			using (ZipFile archive = new ZipFile
+				(file.FullName))
 			{
-				var entries = archive.Entries();
-				while (entries.MoveNext())
-				{
-					var entry = entries.Current;
-					ContextUnit unit = units.GetOrNull(path + "/" + file.GetName());
+				foreach (ZipEntry entry in archive) {
+					ContextUnit unit = units.GetOrNull(path + "/" + file.Name);
 					if (unit == null)
 					{
-						unit = new ContextUnit(type, path, file.GetName(), isOwn, saver, decompiledData);
+						unit = new ContextUnit(type, path, file.Name, isOwn, saver, decompiledData);
 						if (type == ContextUnit.Type_Jar)
 						{
-							unit.SetManifest(((JarFile)archive).GetManifest());
+							//TODO: Set file manifest
+							// unit.SetManifest((archive).GetManifest());
 						}
-						Sharpen.Collections.Put(units, path + "/" + file.GetName(), unit);
+						Sharpen.Collections.Put(units, path + "/" + file.Name, unit);
 					}
-					string name = entry.GetName();
-					if (!entry.IsDirectory())
+					string name = entry.Name;
+					if (!entry.IsDirectory)
 					{
 						if (name.EndsWith(".class"))
 						{
@@ -187,12 +185,12 @@ namespace JetBrainsDecompiler.Struct
 							StructClass cl = new StructClass(bytes, isOwn, loader);
 							Sharpen.Collections.Put(classes, cl.qualifiedName, cl);
 							unit.AddClass(cl, name);
-							loader.AddClassLink(cl.qualifiedName, new LazyLoader.Link(file.GetAbsolutePath(), 
+							loader.AddClassLink(cl.qualifiedName, new LazyLoader.Link(file.FullName, 
 								name));
 						}
 						else
 						{
-							unit.AddOtherEntry(file.GetAbsolutePath(), name);
+							unit.AddOtherEntry(file.FullName, name);
 						}
 					}
 					else
@@ -203,7 +201,7 @@ namespace JetBrainsDecompiler.Struct
 			}
 		}
 
-		public virtual IDictionary<string, StructClass> GetClasses()
+		public virtual Dictionary<string, StructClass> GetClasses()
 		{
 			return classes;
 		}

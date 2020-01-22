@@ -1,7 +1,8 @@
 // Copyright 2000-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System;
 using System.Collections.Generic;
-using Java.IO;
+using System.IO;
+using System.Linq;
 using Java.Util;
 using JetBrainsDecompiler.Main.Extern;
 using JetBrainsDecompiler.Modules.Renamer;
@@ -18,26 +19,24 @@ namespace JetBrainsDecompiler.Main
 
 		private readonly ClassesProcessor classProcessor;
 
-		private readonly IIIdentifierRenamer helper;
+		private readonly IIdentifierRenamer helper;
 
 		private readonly IdentifierConverter converter;
 
-		public Fernflower(IIBytecodeProvider provider, IIResultSaver saver, IDictionary<string
+		public Fernflower(IIBytecodeProvider provider, IIResultSaver saver, Dictionary<string
 			, object> customProperties, IFernflowerLogger logger)
 		{
-			IDictionary<string, object> properties = new Dictionary<string, object>(IIFernflowerPreferences
-				.Defaults);
+			Dictionary<string, object> properties = new Dictionary<string, object>(IFernflowerPreferences.Defaults);
 			if (customProperties != null)
 			{
 				Sharpen.Collections.PutAll(properties, customProperties);
 			}
-			string level = (string)properties.GetOrNull(IIFernflowerPreferences.Log_Level);
+			string level = (string)properties.GetOrNull(IFernflowerPreferences.Log_Level);
 			if (level != null)
 			{
 				try
 				{
-					logger.SetSeverity(IFernflowerLogger.Severity.ValueOf(level.ToUpper(Locale.English
-						)));
+					logger.SetSeverity(IFernflowerLogger.Severity.ValueOf(level.ToUpper()));
 				}
 				catch (ArgumentException)
 				{
@@ -46,9 +45,9 @@ namespace JetBrainsDecompiler.Main
 			structContext = new StructContext(saver, this, new LazyLoader(provider));
 			classProcessor = new ClassesProcessor(structContext);
 			PoolInterceptor interceptor = null;
-			if ("1".Equals(properties.GetOrNull(IIFernflowerPreferences.Rename_Entities)))
+			if ("1".Equals(properties.GetOrNull(IFernflowerPreferences.Rename_Entities)))
 			{
-				helper = LoadHelper((string)properties.GetOrNull(IIFernflowerPreferences.User_Renamer_Class
+				helper = LoadHelper((string)properties.GetOrNull(IFernflowerPreferences.User_Renamer_Class
 					), logger);
 				interceptor = new PoolInterceptor();
 				converter = new IdentifierConverter(structContext, helper, interceptor);
@@ -63,15 +62,14 @@ namespace JetBrainsDecompiler.Main
 			DecompilerContext.SetCurrentContext(context);
 		}
 
-		private static IIIdentifierRenamer LoadHelper(string className, IFernflowerLogger
+		private static IIdentifierRenamer LoadHelper(string className, IFernflowerLogger
 			 logger)
 		{
 			if (className != null)
 			{
 				try
 				{
-					Type renamerClass = typeof(Fernflower).GetClassLoader().LoadClass(className);
-					return (IIIdentifierRenamer)renamerClass.GetDeclaredConstructor().NewInstance();
+					return (IIdentifierRenamer) Activator.CreateInstance(AppDomain.CurrentDomain.GetAssemblies().SelectMany(c => c.GetTypes()).First(c => c.Name == className));
 				}
 				catch (Exception e)
 				{
@@ -82,12 +80,12 @@ namespace JetBrainsDecompiler.Main
 			return new ConverterHelper();
 		}
 
-		public virtual void AddSource(File source)
+		public virtual void AddSource(FileSystemInfo source)
 		{
 			structContext.AddSpace(source, true);
 		}
 
-		public virtual void AddLibrary(File library)
+		public virtual void AddLibrary(FileSystemInfo library)
 		{
 			structContext.AddSpace(library, false);
 		}
@@ -134,7 +132,7 @@ namespace JetBrainsDecompiler.Main
 			try
 			{
 				TextBuffer buffer = new TextBuffer(ClassesProcessor.Average_Class_Size);
-				buffer.Append(DecompilerContext.GetProperty(IIFernflowerPreferences.Banner).ToString
+				buffer.Append(DecompilerContext.GetProperty(IFernflowerPreferences.Banner).ToString
 					());
 				classProcessor.WriteClass(cl, buffer);
 				return buffer.ToString();

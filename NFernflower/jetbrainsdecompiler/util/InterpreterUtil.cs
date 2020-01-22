@@ -1,34 +1,40 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System.Collections.Generic;
 using System.IO;
-using Java.IO;
-using Java.Util.Zip;
+using System.Runtime.InteropServices;
+using ICSharpCode.SharpZipLib.Zip;
+using JetBrainsDecompiler.Code.Cfg;
+using ObjectWeb.Misc.Java.IO;
 using Sharpen;
+using ZipFile = System.IO.Compression.ZipFile;
 
 namespace JetBrainsDecompiler.Util
 {
 	public class InterpreterUtil
 	{
-		public static readonly bool Is_Windows = Runtime.GetProperty("os.name", string.Empty
-			).StartsWith("Windows");
+		public static readonly bool Is_Windows = System.Runtime.InteropServices.RuntimeInformation
+			.IsOSPlatform(OSPlatform.Windows);
 
 		public static readonly int[] Empty_Int_Array = new int[0];
 
 		private const int Buffer_Size = 16 * 1024;
 
-		/// <exception cref="System.IO.IOException"/>
-		public static void CopyFile(File source, File target)
+		/// <exception cref="IOException"/>
+		public static void CopyFile(FileInfo source, FileInfo target)
 		{
-			using (FileStream @in = new FileStream(source))
-			{
-				using (FileOutputStream @out = new FileOutputStream(target))
-				{
-					CopyStream(@in, @out);
-				}
-			}
+			File.Copy(source.FullName, target.FullName);
 		}
 
-		/// <exception cref="System.IO.IOException"/>
+		/// <exception cref="IOException"/>
+		public static void CopyStream(InputStream @in, ZipOutputStream @out)
+		{
+			byte[] buffer = new byte[Buffer_Size];
+			int len;
+			while ((len = @in.Read(buffer)) >= 0)
+			{
+				@out.Write(buffer, 0, len);
+			}
+		}
 		public static void CopyStream(InputStream @in, OutputStream @out)
 		{
 			byte[] buffer = new byte[Buffer_Size];
@@ -39,25 +45,19 @@ namespace JetBrainsDecompiler.Util
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"/>
-		public static byte[] GetBytes(ZipFile archive, ZipEntry entry)
+		/// <exception cref="IOException"/>
+		public static byte[] GetBytes(ICSharpCode.SharpZipLib.Zip.ZipFile archive, ZipEntry entry)
 		{
-			using (InputStream stream = archive.GetInputStream(entry))
-			{
-				return ReadBytes(stream, (int)entry.GetSize());
-			}
+			return archive.GetInputStream(entry).ReadFully();
 		}
 
-		/// <exception cref="System.IO.IOException"/>
-		public static byte[] GetBytes(File file)
+		/// <exception cref="IOException"/>
+		public static byte[] GetBytes(FileInfo file)
 		{
-			using (FileStream stream = new FileStream(file))
-			{
-				return ReadBytes(stream, (int)file.Length());
-			}
+			return File.ReadAllBytes(file.FullName);
 		}
 
-		/// <exception cref="System.IO.IOException"/>
+		/// <exception cref="IOException"/>
 		public static byte[] ReadBytes(InputStream stream, int length)
 		{
 			byte[] bytes = new byte[length];
@@ -75,7 +75,7 @@ namespace JetBrainsDecompiler.Util
 			return bytes;
 		}
 
-		/// <exception cref="System.IO.IOException"/>
+		/// <exception cref="IOException"/>
 		public static void DiscardBytes(InputStream stream, int length)
 		{
 			if (stream.Skip(length) != length)
@@ -84,7 +84,7 @@ namespace JetBrainsDecompiler.Util
 			}
 		}
 
-		public static bool EqualSets<_T0, _T0>(ICollection<_T0> c1, ICollection<_T0> c2)
+		public static bool EqualSets(List<BasicBlock> c1, List<BasicBlock> c2)
 		{
 			if (c1 == null)
 			{
@@ -99,7 +99,7 @@ namespace JetBrainsDecompiler.Util
 				return false;
 			}
 			HashSet<object> set = new HashSet<object>(c1);
-			set.RemoveAll(c2);
+			set.ExceptWith(c2);
 			return (set.Count == 0);
 		}
 
@@ -108,7 +108,31 @@ namespace JetBrainsDecompiler.Util
 			return first == null ? second == null : first.Equals(second);
 		}
 
-		public static bool EqualLists<_T0, _T0>(List<_T0> first, List<_T0> second)
+		public static bool EqualLists(List<object> first, List<object> second)
+		{
+			if (first == null)
+			{
+				return second == null;
+			}
+			else if (second == null)
+			{
+				return false;
+			}
+			if (first.Count == second.Count)
+			{
+				for (int i = 0; i < first.Count; i++)
+				{
+					if (!EqualObjects(first[i], second[i]))
+					{
+						return false;
+					}
+				}
+				return true;
+			}
+			return false;
+		}
+
+		public static bool EqualLists<T>(List<T> first, List<T> second)
 		{
 			if (first == null)
 			{

@@ -1,5 +1,6 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System.Collections.Generic;
+using System.Linq;
 using JetBrainsDecompiler.Code;
 using JetBrainsDecompiler.Main;
 using JetBrainsDecompiler.Main.Collectors;
@@ -70,7 +71,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 			}
 			// catch variables are implicitly defined
 			LinkedList<Statement> stack = new LinkedList<Statement>();
-			stack.Add(root);
+			stack.AddLast(root);
 			while (!(stack.Count == 0))
 			{
 				Statement st = Sharpen.Collections.RemoveFirst(stack);
@@ -194,7 +195,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 		private Statement FindFirstBlock(Statement stat, int varindex)
 		{
 			LinkedList<Statement> stack = new LinkedList<Statement>();
-			stack.Add(stat);
+			stack.AddLast(stat);
 			while (!(stack.Count == 0))
 			{
 				Statement st = stack.RemoveAtReturningValue(0);
@@ -215,7 +216,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 						{
 							case Statement.Type_Sequence:
 							{
-								stack.AddAll(0, st.GetStats());
+								stack = new LinkedList<Statement>(st.GetStats().Concat(stack));
 								break;
 							}
 
@@ -224,7 +225,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 							case Statement.Type_Switch:
 							case Statement.Type_Syncronized:
 							{
-								stack.Add(st.GetFirst());
+								stack.AddLast(st.GetFirst());
 								break;
 							}
 
@@ -283,7 +284,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 					int? count = mapCount.GetOrNullable(index);
 					if (count == null)
 					{
-						count.Value = 0;
+						count = 0;
 					}
 					Sharpen.Collections.Put(mapCount, index, count.Value + 1);
 				}

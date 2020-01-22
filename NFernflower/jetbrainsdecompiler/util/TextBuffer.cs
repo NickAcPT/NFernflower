@@ -1,6 +1,8 @@
 /*
 * Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 */
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using Java.Util;
@@ -16,12 +18,12 @@ namespace JetBrainsDecompiler.Util
 	{
 		private readonly string myLineSeparator = DecompilerContext.GetNewLineSeparator();
 
-		private readonly string myIndent = (string)DecompilerContext.GetProperty(IIFernflowerPreferences
+		private readonly string myIndent = (string)DecompilerContext.GetProperty(IFernflowerPreferences
 			.Indent_String);
 
 		private readonly StringBuilder myStringBuilder;
 
-		private IDictionary<int, int> myLineToOffsetMapping = null;
+		private Dictionary<int, int> myLineToOffsetMapping = null;
 
 		public TextBuffer()
 		{
@@ -154,10 +156,10 @@ namespace JetBrainsDecompiler.Util
 			int lineEnd;
 			int count = 0;
 			int length = myLineSeparator.Length;
-			while ((lineEnd = myStringBuilder.IndexOf(myLineSeparator, lineStart)) > 0)
+			while ((lineEnd = myStringBuilder.ToString().IndexOf(myLineSeparator, lineStart, StringComparison.Ordinal)) > 0)
 			{
 				++count;
-				sb.Append(myStringBuilder.Substring(lineStart, lineEnd));
+				sb.Append(Sharpen.Runtime.Substring(myStringBuilder.ToString(), lineStart, lineEnd));
 				HashSet<int> integers = myLineMapping.GetOrNull(count);
 				if (integers != null)
 				{
@@ -172,7 +174,7 @@ namespace JetBrainsDecompiler.Util
 			}
 			if (lineStart < myStringBuilder.Length)
 			{
-				sb.Append(myStringBuilder.Substring(lineStart));
+				sb.Append(Sharpen.Runtime.Substring(myStringBuilder.ToString(), lineStart));
 			}
 			return sb.ToString();
 		}
@@ -182,8 +184,8 @@ namespace JetBrainsDecompiler.Util
 		{
 			if (to - from > requiredLineNumber)
 			{
-				List<string> strings = CompactLines(Sharpen.Arrays.AsList(srcLines).SubList(from
-					, to), requiredLineNumber);
+				List<string> strings = CompactLines(Sharpen.Arrays.AsList(srcLines).GetRange(from
+					, to - from), requiredLineNumber);
 				int separatorsRequired = requiredLineNumber - 1;
 				foreach (string s in strings)
 				{
@@ -215,7 +217,7 @@ namespace JetBrainsDecompiler.Util
 
 		public virtual void SetStart(int position)
 		{
-			myStringBuilder.Delete(0, position);
+			myStringBuilder.Remove(0, position);
 			ShiftMapping(-position);
 		}
 
@@ -224,7 +226,7 @@ namespace JetBrainsDecompiler.Util
 			myStringBuilder.Length = position;
 			if (myLineToOffsetMapping != null)
 			{
-				IDictionary<int, int> newMap = new Dictionary<int, int>();
+				Dictionary<int, int> newMap = new Dictionary<int, int>();
 				foreach (KeyValuePair<int, int> entry in myLineToOffsetMapping)
 				{
 					if (entry.Value <= position)
@@ -255,7 +257,7 @@ namespace JetBrainsDecompiler.Util
 		{
 			if (myLineToOffsetMapping != null)
 			{
-				IDictionary<int, int> newMap = new Dictionary<int, int>();
+				Dictionary<int, int> newMap = new Dictionary<int, int>();
 				foreach (KeyValuePair<int, int> entry in myLineToOffsetMapping)
 				{
 					int newValue = entry.Value;
@@ -295,7 +297,7 @@ namespace JetBrainsDecompiler.Util
 			int count = 0;
 			int length = substring.Length;
 			int p = from;
-			while ((p = myStringBuilder.IndexOf(substring, p)) > 0)
+			while ((p = myStringBuilder.ToString().IndexOf(substring, p, StringComparison.Ordinal)) > 0)
 			{
 				++count;
 				p += length;
@@ -310,14 +312,14 @@ namespace JetBrainsDecompiler.Util
 			{
 				return srcLines;
 			}
-			List<string> res = new LinkedList<string>(srcLines);
+			List<string> res = new List<string>(srcLines);
 			// first join lines with a single { or }
 			for (int i = res.Count - 1; i > 0; i--)
 			{
 				string s = res[i];
 				if (s.Trim().Equals("{") || s.Trim().Equals("}"))
 				{
-					res[i - 1] = res[i - 1].Concat(s);
+					res[i - 1] = res[i - 1] + (s);
 					res.RemoveAtReturningValue(i);
 				}
 				if (res.Count <= requiredLineNumber)
@@ -331,7 +333,7 @@ namespace JetBrainsDecompiler.Util
 				string s = res[i];
 				if ((s.Trim().Length == 0))
 				{
-					res[i - 1] = res[i - 1].Concat(s);
+					res[i - 1] = res[i - 1] + (s);
 					res.RemoveAtReturningValue(i);
 				}
 				if (res.Count <= requiredLineNumber)
@@ -342,7 +344,7 @@ namespace JetBrainsDecompiler.Util
 			return res;
 		}
 
-		private IDictionary<int, HashSet<int>> myLineMapping = null;
+		private Dictionary<int, HashSet<int>> myLineMapping = null;
 
 		// new to original
 		public virtual void DumpOriginalLineNumbers(int[] lineMapping)
@@ -353,7 +355,7 @@ namespace JetBrainsDecompiler.Util
 				for (int i = 0; i < lineMapping.Length; i += 2)
 				{
 					int key = lineMapping[i + 1];
-					HashSet<int> existing = myLineMapping.ComputeIfAbsent(key, (int k) => new TreeSet
+					HashSet<int> existing = myLineMapping.ComputeIfAbsent(key, (int k) => new HashSet
 						<int>());
 					existing.Add(lineMapping[i]);
 				}

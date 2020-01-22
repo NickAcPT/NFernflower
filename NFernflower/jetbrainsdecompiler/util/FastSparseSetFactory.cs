@@ -1,4 +1,6 @@
 // Copyright 2000-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
+
+using System.Collections;
 using System.Collections.Generic;
 using Sharpen;
 
@@ -52,9 +54,9 @@ namespace JetBrainsDecompiler.Util
 			return pointer;
 		}
 
-		public virtual FastSparseSetFactory.FastSparseSet<E> SpawnEmptySet()
+		public virtual FastSparseSetFactory<E>.FastSparseSet<E> SpawnEmptySet()
 		{
-			return new FastSparseSetFactory.FastSparseSet<E>(this);
+			return new FastSparseSetFactory<E>.FastSparseSet<E>(this);
 		}
 
 		public virtual int GetLastBlock()
@@ -69,7 +71,7 @@ namespace JetBrainsDecompiler.Util
 
 		public class FastSparseSet<E> : IEnumerable<E>
 		{
-			public static readonly FastSparseSetFactory.FastSparseSet[] Empty_Array = new FastSparseSetFactory.FastSparseSet
+			public static readonly FastSparseSetFactory<E>.FastSparseSet<E>[] Empty_Array = new FastSparseSetFactory<E>.FastSparseSet<E>
 				[0];
 
 			private readonly FastSparseSetFactory<E> factory;
@@ -80,7 +82,7 @@ namespace JetBrainsDecompiler.Util
 
 			private int[] next;
 
-			private FastSparseSet(FastSparseSetFactory<E> factory)
+			internal FastSparseSet(FastSparseSetFactory<E> factory)
 			{
 				this.factory = factory;
 				this.colValuesInternal = factory.GetInternalValuesCollection();
@@ -97,14 +99,14 @@ namespace JetBrainsDecompiler.Util
 				this.next = next;
 			}
 
-			public virtual FastSparseSetFactory.FastSparseSet<E> GetCopy()
+			public virtual FastSparseSetFactory<E>.FastSparseSet<E> GetCopy()
 			{
 				int arrlength = data.Length;
 				int[] cpdata = new int[arrlength];
 				int[] cpnext = new int[arrlength];
 				System.Array.Copy(data, 0, cpdata, 0, arrlength);
 				System.Array.Copy(next, 0, cpnext, 0, arrlength);
-				return new FastSparseSetFactory.FastSparseSet<E>(factory, cpdata, cpnext);
+				return new FastSparseSetFactory<E>.FastSparseSet<E>(factory, cpdata, cpnext);
 			}
 
 			private int[] EnsureCapacity(int index)
@@ -199,7 +201,7 @@ namespace JetBrainsDecompiler.Util
 				}
 			}
 
-			public virtual void Union(FastSparseSetFactory.FastSparseSet<E> set)
+			public virtual void Union(FastSparseSetFactory<E>.FastSparseSet<E> set)
 			{
 				int[] extdata = set.GetData();
 				int[] extnext = set.GetNext();
@@ -223,7 +225,7 @@ namespace JetBrainsDecompiler.Util
 				while (pointer != 0);
 			}
 
-			public virtual void Intersection(FastSparseSetFactory.FastSparseSet<E> set)
+			public virtual void Intersection(FastSparseSetFactory<E>.FastSparseSet<E> set)
 			{
 				int[] extdata = set.GetData();
 				int[] intdata = data;
@@ -239,7 +241,7 @@ namespace JetBrainsDecompiler.Util
 				SetNext();
 			}
 
-			public virtual void Complement(FastSparseSetFactory.FastSparseSet<E> set)
+			public virtual void Complement(FastSparseSetFactory<E>.FastSparseSet<E> set)
 			{
 				int[] extdata = set.GetData();
 				int[] intdata = data;
@@ -267,12 +269,12 @@ namespace JetBrainsDecompiler.Util
 				{
 					return true;
 				}
-				if (!(Sharpen.Runtime.InstanceOf(o, typeof(FastSparseSetFactory.FastSparseSet<>))
+				if (!(Sharpen.Runtime.InstanceOf(o, typeof(FastSparseSetFactory<E>.FastSparseSet<E>))
 					))
 				{
 					return false;
 				}
-				int[] longdata = ((FastSparseSetFactory.FastSparseSet)o).GetData();
+				int[] longdata = ((FastSparseSetFactory<E>.FastSparseSet<E>)o).GetData();
 				int[] shortdata = data;
 				if (data.Length > longdata.Length)
 				{
@@ -327,9 +329,9 @@ namespace JetBrainsDecompiler.Util
 				return data.Length == 0 || (next[0] == 0 && data[0] == 0);
 			}
 
-			public override IEnumerator<E> GetEnumerator()
+			public IEnumerator<E> GetEnumerator()
 			{
-				return new FastSparseSetFactory.FastSparseSetIterator<E>(this);
+				return new FastSparseSetFactory<E>.FastSparseSetIterator<E>(this);
 			}
 
 			public virtual HashSet<E> ToPlainSet()
@@ -357,12 +359,17 @@ namespace JetBrainsDecompiler.Util
 				return ToPlainSet().ToString();
 			}
 
-			private int[] GetData()
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return GetEnumerator();
+			}
+
+			internal int[] GetData()
 			{
 				return data;
 			}
 
-			private int[] GetNext()
+			internal int[] GetNext()
 			{
 				return next;
 			}
@@ -387,8 +394,9 @@ namespace JetBrainsDecompiler.Util
 
 			private int next_pointer = -1;
 
-			private FastSparseSetIterator(FastSparseSetFactory.FastSparseSet<E> set)
+			internal FastSparseSetIterator(object mySet)
 			{
+				var set = (FastSparseSetFactory<E>.FastSparseSet<E>) mySet;
 				colValuesInternal = set.GetFactory().GetInternalValuesCollection();
 				data = set.GetData();
 				next = set.GetNext();
@@ -426,13 +434,20 @@ namespace JetBrainsDecompiler.Util
 				return -1;
 			}
 
-			public override bool MoveNext()
+			public bool MoveNext()
 			{
 				next_pointer = GetNextIndex(pointer);
 				return (next_pointer >= 0);
 			}
 
-			public override E Current
+			public void Reset()
+			{
+				throw new System.NotImplementedException();
+			}
+
+			object? IEnumerator.Current => Current;
+
+			public E Current
 			{
 				get
 				{
@@ -449,14 +464,18 @@ namespace JetBrainsDecompiler.Util
 						}
 					}
 					next_pointer = -1;
-					return pointer < size ? colValuesInternal.GetKey(pointer) : null;
+					return pointer < size ? colValuesInternal.GetKey(pointer) : default;
 				}
 			}
 
-			public override void Remove()
+			public void Remove()
 			{
 				int[] index = colValuesInternal[pointer];
 				data[index[0]] &= ~index[1];
+			}
+
+			public void Dispose()
+			{
 			}
 		}
 	}

@@ -25,8 +25,8 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 		private readonly Dictionary<string, SFormsFastMapDirect> extraVarVersions = new Dictionary
 			<string, SFormsFastMapDirect>();
 
-		private readonly Dictionary<VarVersionPair, FastSparseSetFactory.FastSparseSet<int
-			>> phi = new Dictionary<VarVersionPair, FastSparseSetFactory.FastSparseSet<int>>
+		private readonly Dictionary<VarVersionPair, FastSparseSetFactory<int>.FastSparseSet<int
+			>> phi = new Dictionary<VarVersionPair, FastSparseSetFactory<int>.FastSparseSet<int>>
 			();
 
 		private readonly Dictionary<int, int> lastversion = new Dictionary<int, int>();
@@ -231,7 +231,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 			{
 				VarExprent vardest = (VarExprent)expr;
 				int varindex = vardest.GetIndex();
-				FastSparseSetFactory.FastSparseSet<int> vers = varmap.Get(varindex);
+				FastSparseSetFactory<int>.FastSparseSet<int> vers = varmap.Get(varindex);
 				int cardinality = vers.GetCardinality();
 				if (cardinality == 1)
 				{
@@ -271,11 +271,11 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 			int? nextver = lastversion.GetOrNullable(var);
 			if (nextver == null)
 			{
-				nextver.Value = 1;
+				nextver = 1;
 			}
 			else
 			{
-				nextver.Value++;
+				nextver++;
 			}
 			Sharpen.Collections.Put(lastversion, var, nextver.Value);
 			return nextver.Value;
@@ -427,7 +427,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 			{
 				return false;
 			}
-			foreach (KeyValuePair<int, FastSparseSetFactory.FastSparseSet<int>> ent2 in map2.
+			foreach (KeyValuePair<int, FastSparseSetFactory<int>.FastSparseSet<int>> ent2 in map2.
 				EntryList())
 			{
 				if (!InterpreterUtil.EqualObjects(map1.Get(ent2.Key), ent2.Value))
@@ -440,7 +440,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 
 		private void SetCurrentVar(SFormsFastMapDirect varmap, int var, int vers)
 		{
-			FastSparseSetFactory.FastSparseSet<int> set = factory.SpawnEmptySet();
+			FastSparseSetFactory<int>.FastSparseSet<int> set = factory.SpawnEmptySet();
 			set.Add(vers);
 			varmap.Put(var, set);
 		}
@@ -493,7 +493,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 			{
 				int version = GetNextFreeVersion(varindex);
 				// == 1
-				FastSparseSetFactory.FastSparseSet<int> set = factory.SpawnEmptySet();
+				FastSparseSetFactory<int>.FastSparseSet<int> set = factory.SpawnEmptySet();
 				set.Add(version);
 				map.Put(varindex, set);
 				if (thisvar)
@@ -515,7 +515,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 			return map;
 		}
 
-		public virtual Dictionary<VarVersionPair, FastSparseSetFactory.FastSparseSet<int>
+		public virtual Dictionary<VarVersionPair, FastSparseSetFactory<int>.FastSparseSet<int>
 			> GetPhi()
 		{
 			return phi;

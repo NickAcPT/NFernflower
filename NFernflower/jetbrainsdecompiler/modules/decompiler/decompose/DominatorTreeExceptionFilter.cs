@@ -11,16 +11,16 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 	{
 		private readonly Statement statement;
 
-		private readonly IDictionary<int, HashSet<int>> mapTreeBranches = new Dictionary<
-			int, HashSet<int>>();
+		private readonly Dictionary<int?, HashSet<int>> mapTreeBranches = new Dictionary<
+			int?, HashSet<int>>();
 
-		private readonly IDictionary<int, HashSet<int>> mapExceptionRanges = new Dictionary
+		private readonly Dictionary<int, HashSet<int>> mapExceptionRanges = new Dictionary
 			<int, HashSet<int>>();
 
-		private IDictionary<int, int> mapExceptionDoms = new Dictionary<int, int>();
+		private Dictionary<int, int> mapExceptionDoms = new Dictionary<int, int>();
 
-		private readonly IDictionary<int, IDictionary<int, int>> mapExceptionRangeUniqueExit
-			 = new Dictionary<int, IDictionary<int, int>>();
+		private readonly Dictionary<int?, Dictionary<int, int>> mapExceptionRangeUniqueExit
+			 = new Dictionary<int?, Dictionary<int, int>>();
 
 		private DominatorEngine domEngine;
 
@@ -47,7 +47,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 
 		public virtual bool AcceptStatementPair(int head, int exit)
 		{
-			IDictionary<int, int> filter = mapExceptionRangeUniqueExit.GetOrNull(head);
+			Dictionary<int, int> filter = mapExceptionRangeUniqueExit.GetOrNull(head);
 			foreach (KeyValuePair<int, int> entry in filter)
 			{
 				if (!head.Equals(mapExceptionDoms.GetOrNullable(entry.Key)))
@@ -64,13 +64,13 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 
 		private void BuildDominatorTree()
 		{
-			VBStyleCollection<int, int> orderedIDoms = domEngine.GetOrderedIDoms();
+			VBStyleCollection<int?, int> orderedIDoms = domEngine.GetOrderedIDoms();
 			List<int> lstKeys = orderedIDoms.GetLstKeys();
 			for (int index = lstKeys.Count - 1; index >= 0; index--)
 			{
 				int key = lstKeys[index];
-				int idom = orderedIDoms[index];
-				mapTreeBranches.ComputeIfAbsent(idom, (int k) => new HashSet<int>()).Add(key);
+				int? idom = orderedIDoms[index];
+				mapTreeBranches.ComputeIfAbsent(idom, (k) => new HashSet<int>()).Add(key);
 			}
 			int firstid = statement.GetFirst().id;
 			mapTreeBranches.GetOrNull(firstid).Remove(firstid);
@@ -95,15 +95,15 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 			mapExceptionDoms = BuildExceptionDoms(statement.GetFirst().id);
 		}
 
-		private IDictionary<int, int> BuildExceptionDoms(int id)
+		private Dictionary<int, int> BuildExceptionDoms(int id)
 		{
-			IDictionary<int, int> map = new Dictionary<int, int>();
+			Dictionary<int, int> map = new Dictionary<int, int>();
 			HashSet<int> children = mapTreeBranches.GetOrNull(id);
 			if (children != null)
 			{
 				foreach (int childid in children)
 				{
-					IDictionary<int, int> mapChild = BuildExceptionDoms(childid);
+					Dictionary<int, int> mapChild = BuildExceptionDoms(childid);
 					foreach (int handler in mapChild.Keys)
 					{
 						Sharpen.Collections.Put(map, handler, map.ContainsKey(handler) ? id : mapChild.GetOrNullable
@@ -123,21 +123,21 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 
 		private void BuildFilter(int id)
 		{
-			IDictionary<int, int> map = new Dictionary<int, int>();
+			Dictionary<int, int> map = new Dictionary<int, int>();
 			HashSet<int> children = mapTreeBranches.GetOrNull(id);
 			if (children != null)
 			{
 				foreach (int childid in children)
 				{
 					BuildFilter(childid);
-					IDictionary<int, int> mapChild = mapExceptionRangeUniqueExit.GetOrNull(childid);
+					Dictionary<int, int> mapChild = mapExceptionRangeUniqueExit.GetOrNull(childid);
 					foreach (KeyValuePair<int, HashSet<int>> entry in mapExceptionRanges)
 					{
 						int handler = entry.Key;
 						HashSet<int> range = entry.Value;
 						if (range.Contains(id))
 						{
-							int exit;
+							int? exit;
 							if (!range.Contains(childid))
 							{
 								exit = childid;
@@ -146,7 +146,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 							{
 								// after replacing 'new Integer(-1)' with '-1' Eclipse throws a NullPointerException on the following line
 								// could be a bug in Eclipse or some obscure specification glitch, FIXME: needs further investigation
-								exit = map.ContainsKey(handler) ? -1 : mapChild.GetOrNullable(handler);
+								exit = (map.ContainsKey(handler) ? -1 : mapChild.GetOrNullable(handler));
 							}
 							if (exit != null)
 							{

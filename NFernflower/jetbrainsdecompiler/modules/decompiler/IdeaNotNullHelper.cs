@@ -205,7 +205,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 										}
 										if (!(ifparent.GetFirst().GetExprents().Count == 0))
 										{
-											elsebranch.GetExprents().AddAll(0, ifparent.GetFirst().GetExprents());
+											elsebranch.GetExprents().InsertRange(0, ifparent.GetFirst().GetExprents());
 										}
 										ifparent.GetParent().ReplaceStatement(ifparent, elsebranch);
 										ifparent.GetParent().SetAllParent();
@@ -258,7 +258,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 											// remove 'else' edge
 											if (!(ifstat.GetFirst().GetExprents().Count == 0))
 											{
-												stat.GetExprents().AddAll(0, ifstat.GetFirst().GetExprents());
+												stat.GetExprents().InsertRange(0, ifstat.GetFirst().GetExprents());
 											}
 											foreach (StatEdge edge in ifstat.GetAllPredecessorEdges())
 											{

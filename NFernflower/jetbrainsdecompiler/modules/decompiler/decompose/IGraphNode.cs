@@ -4,8 +4,8 @@ using Sharpen;
 
 namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 {
-	public interface IIGraphNode
+	public interface IGraphNode
 	{
-		List<IIGraphNode> GetPredecessors();
+		List<IGraphNode> GetPredecessors();
 	}
 }

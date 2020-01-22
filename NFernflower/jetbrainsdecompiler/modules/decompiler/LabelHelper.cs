@@ -186,7 +186,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 		private static Dictionary<Statement, List<StatEdge>> SetExplicitEdges(Statement 
 			stat)
 		{
-			Dictionary<Statement, List<StatEdge>> mapEdges = new Dictionary<Statement, IList
+			Dictionary<Statement, List<StatEdge>> mapEdges = new Dictionary<Statement, List
 				<StatEdge>>();
 			if (stat.GetExprents() != null)
 			{
@@ -339,8 +339,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			return mapEdges;
 		}
 
-		private static void ProcessEdgesWithNext(Statement stat, Dictionary<Statement, IList
-			<StatEdge>> mapEdges, Statement next)
+		private static void ProcessEdgesWithNext(Statement stat, Dictionary<Statement, List<StatEdge>> mapEdges, Statement next)
 		{
 			StatEdge statedge = null;
 			List<StatEdge> lstSuccs = stat.GetAllSuccessorEdges();
@@ -474,9 +473,9 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 
 		private class LabelSets
 		{
-			private readonly HashSet<Statement> breaks = new HashSet<Statement>();
+			internal readonly HashSet<Statement> breaks = new HashSet<Statement>();
 
-			private readonly HashSet<Statement> continues = new HashSet<Statement>();
+			internal readonly HashSet<Statement> continues = new HashSet<Statement>();
 		}
 
 		private static LabelHelper.LabelSets ProcessStatementLabel(Statement stat)

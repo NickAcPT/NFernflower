@@ -1,6 +1,8 @@
 // Copyright 2000-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Sharpen;
 
 namespace JetBrainsDecompiler.Util
@@ -18,32 +20,38 @@ namespace JetBrainsDecompiler.Util
 		}
 
 		public VBStyleCollection(int initialCapacity)
-			: base(initialCapacity)
+			: base()
 		{
 			lstKeys = new List<K>(initialCapacity);
 			map = new Dictionary<K, int>(initialCapacity);
 		}
 
-		public override bool Add(E element)
+		public bool Add(E element)
 		{
-			lstKeys.Add(null);
+			lstKeys.Add(default);
 			base.Add(element);
 			return true;
 		}
 
-		public override bool Remove(object element)
+		public bool Remove(object element)
 		{
 			// TODO: error on void remove(E element)
 			throw new Exception("not implemented!");
 		}
 
-		public override bool AddAll<_T0>(ICollection<_T0> c)
+		public bool AddAll(ICollection<E> c)
 		{
 			for (int i = c.Count - 1; i >= 0; i--)
 			{
-				lstKeys.Add(null);
+				lstKeys.Add(default);
 			}
-			return base.Sharpen.Collections.AddAll(c);
+
+			foreach (var i in c)
+			{
+				base.Add(i);
+			}
+
+			return false;
 		}
 
 		public virtual void AddAllWithKey(ICollection<E> elements, ICollection<K> keys)
@@ -53,7 +61,10 @@ namespace JetBrainsDecompiler.Util
 			{
 				Sharpen.Collections.Put(map, key, index++);
 			}
-			base.Sharpen.Collections.AddAll(elements);
+			foreach (var i in elements)
+			{
+				base.Add(i);
+			}
 			Sharpen.Collections.AddAll(lstKeys, keys);
 		}
 
@@ -74,23 +85,23 @@ namespace JetBrainsDecompiler.Util
 			}
 			else
 			{
-				return base.Set(index.Value, element);
+				return base[(index.Value)] = (element);
 			}
-			return null;
+			return default;
 		}
 
-		public override void Add(int index, E element)
+		public void Add(int index, E element)
 		{
 			AddToListIndex(index, 1);
-			lstKeys.Add(index, null);
-			base.Add(index, element);
+			lstKeys.Add(index, default);
+			base.Insert(index, element);
 		}
 
 		public virtual void AddWithKeyAndIndex(int index, E element, K key)
 		{
 			AddToListIndex(index, 1);
 			Sharpen.Collections.Put(map, key, index);
-			base.Add(index, element);
+			base.Insert(index, element);
 			lstKeys.Add(index, key);
 		}
 
@@ -98,12 +109,12 @@ namespace JetBrainsDecompiler.Util
 		{
 			int? index = map.GetOrNullable(key);
 			AddToListIndex(index.Value + 1, -1);
-			base.RemoveAtReturningValue(index.Value);
+			base.RemoveAt(index.Value);
 			lstKeys.RemoveAtReturningValue(index.Value);
 			Sharpen.Collections.Remove(map, key);
 		}
 
-		public override E RemoveAtReturningValue(int index)
+		public E RemoveAtReturningValue(int index)
 		{
 			AddToListIndex(index + 1, -1);
 			K obj = lstKeys[index];
@@ -112,27 +123,29 @@ namespace JetBrainsDecompiler.Util
 				Sharpen.Collections.Remove(map, obj);
 			}
 			lstKeys.RemoveAtReturningValue(index);
-			return base.RemoveAtReturningValue(index);
+			var result = base[index];
+			base.RemoveAt(index);
+			return result;
 		}
 
 		public virtual E GetWithKey(K key)
 		{
 			int? index = map.GetOrNullable(key);
-			if (index == null)
+			if (index == null || index < 0)
 			{
-				return null;
+				return default;
 			}
-			return base.Get;
+			return base[index.Value];
 		}
 
 		public virtual int GetIndexByKey(K key)
 		{
-			return map.GetOrNullable(key);
+			return map.GetOrNullable(key) ?? -1;
 		}
 
 		public virtual E GetLast()
 		{
-			return base.Get;
+			return base[base.Count - 1];
 		}
 
 		public virtual bool ContainsKey(K key)
@@ -140,14 +153,32 @@ namespace JetBrainsDecompiler.Util
 			return map.ContainsKey(key);
 		}
 
-		public override void Clear()
+		public void Clear()
 		{
 			map.Clear();
 			lstKeys.Clear();
 			base.Clear();
 		}
 
-		public override object Clone()
+		public bool Contains(E item)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void CopyTo(E[] array, int arrayIndex)
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool Remove(E item)
+		{
+			throw new NotImplementedException();
+		}
+
+		public int Count { get; }
+		public bool IsReadOnly { get; }
+
+		public object Clone()
 		{
 			VBStyleCollection<E, K> c = new VBStyleCollection<E, K>();
 			Sharpen.Collections.AddAll(c, new List<E>(this));
@@ -186,6 +217,32 @@ namespace JetBrainsDecompiler.Util
 					Sharpen.Collections.Put(map, obj, i + diff);
 				}
 			}
+		}
+
+		public IEnumerator<E> GetEnumerator()
+		{
+			throw new NotImplementedException();
+		}
+
+		public int IndexOf(E item)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void Insert(int index, E item)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void RemoveAt(int index)
+		{
+			throw new NotImplementedException();
+		}
+
+		public E this[int index]
+		{
+			get => throw new NotImplementedException();
+			set => throw new NotImplementedException();
 		}
 	}
 }

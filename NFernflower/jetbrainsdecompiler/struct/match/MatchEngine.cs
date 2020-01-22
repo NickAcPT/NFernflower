@@ -1,6 +1,7 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrainsDecompiler.Modules.Decompiler.Exps;
 using JetBrainsDecompiler.Modules.Decompiler.Stats;
 using JetBrainsDecompiler.Struct.Gen;
@@ -10,28 +11,28 @@ namespace JetBrainsDecompiler.Struct.Match
 {
 	public class MatchEngine
 	{
-		private static readonly IDictionary<string, IMatchable.MatchProperties> stat_properties
+		private static readonly Dictionary<string, IMatchable.MatchProperties> stat_properties
 			 = new Dictionary<string, IMatchable.MatchProperties>();
 
-		private static readonly IDictionary<string, IMatchable.MatchProperties> expr_properties
+		private static readonly Dictionary<string, IMatchable.MatchProperties> expr_properties
 			 = new Dictionary<string, IMatchable.MatchProperties>();
 
-		private static readonly IDictionary<string, int> stat_type = new Dictionary<string
+		private static readonly Dictionary<string, int> stat_type = new Dictionary<string
 			, int>();
 
-		private static readonly IDictionary<string, int> expr_type = new Dictionary<string
+		private static readonly Dictionary<string, int> expr_type = new Dictionary<string
 			, int>();
 
-		private static readonly IDictionary<string, int> expr_func_type = new Dictionary<
+		private static readonly Dictionary<string, int> expr_func_type = new Dictionary<
 			string, int>();
 
-		private static readonly IDictionary<string, int> expr_exit_type = new Dictionary<
+		private static readonly Dictionary<string, int> expr_exit_type = new Dictionary<
 			string, int>();
 
-		private static readonly IDictionary<string, int> stat_if_type = new Dictionary<string
+		private static readonly Dictionary<string, int> stat_if_type = new Dictionary<string
 			, int>();
 
-		private static readonly IDictionary<string, VarType> expr_const_type = new Dictionary
+		private static readonly Dictionary<string, VarType> expr_const_type = new Dictionary
 			<string, VarType>();
 
 		static MatchEngine()
@@ -103,7 +104,7 @@ namespace JetBrainsDecompiler.Struct.Match
 
 		private readonly MatchNode rootNode;
 
-		private readonly IDictionary<string, object> variables = new Dictionary<string, object
+		private readonly Dictionary<string, object> variables = new Dictionary<string, object
 			>();
 
 		public MatchEngine(string description)
@@ -111,7 +112,7 @@ namespace JetBrainsDecompiler.Struct.Match
 			// each line is a separate statement/exprent
 			string[] lines = description.Split("\n");
 			int depth = 0;
-			LinkedList<MatchNode> stack = new LinkedList<MatchNode>();
+			Stack<MatchNode> stack = new Stack<MatchNode>();
 			foreach (string line in lines)
 			{
 				List<string> properties = new List<string>(Sharpen.Arrays.AsList(line.Split("\\s+"
@@ -227,21 +228,21 @@ namespace JetBrainsDecompiler.Struct.Match
 						stack.Pop();
 					}
 					// insert new node
-					stack.GetFirst().AddChild(matchNode);
+					stack.First().AddChild(matchNode);
 					stack.Push(matchNode);
 					depth = new_depth;
 				}
 			}
-			this.rootNode = stack.GetLast();
+			this.rootNode = stack.Last();
 		}
 
-		public virtual bool Match(IIMatchable @object)
+		public virtual bool Match(IMatchable @object)
 		{
 			variables.Clear();
 			return Match(this.rootNode, @object);
 		}
 
-		private bool Match(MatchNode matchNode, IIMatchable @object)
+		private bool Match(MatchNode matchNode, IMatchable @object)
 		{
 			if (!@object.Match(matchNode, this))
 			{
@@ -252,7 +253,7 @@ namespace JetBrainsDecompiler.Struct.Match
 			foreach (MatchNode childNode in matchNode.GetChildren())
 			{
 				bool isStatement = childNode.GetType() == MatchNode.Matchnode_Statement;
-				IIMatchable childObject = @object.FindObject(childNode, isStatement ? stat_index : 
+				IMatchable childObject = @object.FindObject(childNode, isStatement ? stat_index : 
 					expr_index);
 				if (childObject == null || !Match(childNode, childObject))
 				{

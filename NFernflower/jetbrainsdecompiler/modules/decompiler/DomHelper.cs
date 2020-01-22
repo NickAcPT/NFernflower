@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrainsDecompiler.Code.Cfg;
 using JetBrainsDecompiler.Main;
 using JetBrainsDecompiler.Main.Extern;
@@ -88,22 +89,22 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 		public static VBStyleCollection<List<int>, int> CalcPostDominators(Statement container
 			)
 		{
-			Dictionary<Statement, FastFixedSetFactory.FastFixedSet<Statement>> lists = new Dictionary
-				<Statement, FastFixedSetFactory.FastFixedSet<Statement>>();
+			Dictionary<Statement, FastFixedSetFactory<Statement>.FastFixedSet<Statement>> lists = new Dictionary
+				<Statement, FastFixedSetFactory<Statement>.FastFixedSet<Statement>>();
 			StrongConnectivityHelper schelper = new StrongConnectivityHelper(container);
 			List<List<Statement>> components = schelper.GetComponents();
 			List<Statement> lstStats = container.GetPostReversePostOrderList(StrongConnectivityHelper
 				.GetExitReps(components));
 			FastFixedSetFactory<Statement> factory = new FastFixedSetFactory<Statement>(lstStats
 				);
-			FastFixedSetFactory.FastFixedSet<Statement> setFlagNodes = factory.SpawnEmptySet(
+			FastFixedSetFactory<Statement>.FastFixedSet<Statement> setFlagNodes = factory.SpawnEmptySet(
 				);
 			setFlagNodes.SetAllElements();
-			FastFixedSetFactory.FastFixedSet<Statement> initSet = factory.SpawnEmptySet();
+			FastFixedSetFactory<Statement>.FastFixedSet<Statement> initSet = factory.SpawnEmptySet();
 			initSet.SetAllElements();
 			foreach (List<Statement> lst in components)
 			{
-				FastFixedSetFactory.FastFixedSet<Statement> tmpSet;
+				FastFixedSetFactory<Statement>.FastFixedSet<Statement> tmpSet;
 				if (StrongConnectivityHelper.IsExitComponent(lst))
 				{
 					tmpSet = factory.SpawnEmptySet();
@@ -127,14 +128,14 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 						continue;
 					}
 					setFlagNodes.Remove(stat);
-					FastFixedSetFactory.FastFixedSet<Statement> doms = lists.GetOrNull(stat);
-					FastFixedSetFactory.FastFixedSet<Statement> domsSuccs = factory.SpawnEmptySet();
+					FastFixedSetFactory<Statement>.FastFixedSet<Statement> doms = lists.GetOrNull(stat);
+					FastFixedSetFactory<Statement>.FastFixedSet<Statement> domsSuccs = factory.SpawnEmptySet();
 					List<Statement> lstSuccs = stat.GetNeighbours(StatEdge.Type_Regular, Statement.Direction_Forward
 						);
 					for (int j = 0; j < lstSuccs.Count; j++)
 					{
 						Statement succ = lstSuccs[j];
-						FastFixedSetFactory.FastFixedSet<Statement> succlst = lists.GetOrNull(succ);
+						FastFixedSetFactory<Statement>.FastFixedSet<Statement> succlst = lists.GetOrNull(succ);
 						if (j == 0)
 						{
 							domsSuccs.Union(succlst);
@@ -176,7 +177,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 				{
 					lstPosts.Add(stt.id);
 				}
-				lstPosts.Sort(IComparer.Comparing(mapSortOrder));
+				lstPosts = lstPosts.OrderBy(c => mapSortOrder[c]).ToList();
 				if (lstPosts.Count > 1 && lstPosts[0] == st.id)
 				{
 					lstPosts.Add(lstPosts.RemoveAtReturningValue(0));
@@ -490,7 +491,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 							if (addhd)
 							{
 								LinkedList<Statement> lstStack = new LinkedList<Statement>();
-								lstStack.Add(handler);
+								lstStack.AddLast(handler);
 								while (!(lstStack.Count == 0))
 								{
 									Statement st = lstStack.RemoveAtReturningValue(0);

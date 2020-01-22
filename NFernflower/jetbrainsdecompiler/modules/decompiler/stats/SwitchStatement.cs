@@ -205,12 +205,12 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 			int[] values = ((SwitchInstruction)bbstat.GetBlock().GetLastInstruction()).GetValues
 				();
 			List<Statement> nodes = new List<Statement>(stats.Count - 1);
-			List<List<int>> edges = new List<List<int>>(stats.Count - 1);
+			List<List<int?>> edges = new List<List<int?>>(stats.Count - 1);
 			// collect regular edges
 			for (int i = 1; i < stats.Count; i++)
 			{
 				Statement stat = stats[i];
-				List<int> lst = new List<int>();
+				List<int?> lst = new List<int?>();
 				foreach (StatEdge edge in stat.GetPredecessorEdges(StatEdge.Type_Regular))
 				{
 					if (edge.GetSource() == first)
@@ -228,7 +228,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 			while (!(lstExitEdges.Count == 0))
 			{
 				StatEdge edge = lstExitEdges[0];
-				List<int> lst = new List<int>();
+				List<int?> lst = new List<int?>();
 				for (int i = lstExitEdges.Count - 1; i >= 0; i--)
 				{
 					StatEdge edgeTemp = lstExitEdges[i];
@@ -294,16 +294,17 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 			// translate indices back into edges
 			List<List<StatEdge>> lstEdges = new List<List<StatEdge>>(edges.Count);
 			List<List<Exprent>> lstValues = new List<List<Exprent>>(edges.Count);
-			foreach (List<int> lst in edges)
+			foreach (List<int?> lst in edges)
 			{
 				List<StatEdge> lste = new List<StatEdge>(lst.Count);
 				List<Exprent> lstv = new List<Exprent>(lst.Count);
 				List<StatEdge> lstSuccs = first.GetSuccessorEdges(Statedge_Direct_All);
-				foreach (int @in in lst)
+				foreach (int? @in in lst)
 				{
-					int index = @in == lstSuccs.Count ? 0 : @in;
-					lste.Add(lstSuccs[index]);
-					lstv.Add(index == 0 ? null : new ConstExprent(values[index - 1], false, null));
+					int? index = @in == lstSuccs.Count ? 0 : @in; 
+					if (!index.HasValue) continue;
+					lste.Add(lstSuccs[index.Value]);
+					lstv.Add(index == 0 ? null : new ConstExprent(values[index.Value - 1], false, null));
 				}
 				lstEdges.Add(lste);
 				lstValues.Add(lstv);

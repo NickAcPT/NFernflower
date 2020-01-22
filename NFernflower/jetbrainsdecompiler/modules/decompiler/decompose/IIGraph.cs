@@ -6,8 +6,8 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 {
 	public interface IIGraph
 	{
-		List<IIGraphNode> GetReversePostOrderList();
+		LinkedList<IGraphNode> GetReversePostOrderList();
 
-		HashSet<IIGraphNode> GetRoots();
+		HashSet<IGraphNode> GetRoots();
 	}
 }

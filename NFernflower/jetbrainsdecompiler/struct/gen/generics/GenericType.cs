@@ -266,7 +266,7 @@ loop_break: ;
 
 		public virtual GenericType DecreaseArrayDim()
 		{
-			System.Diagnostics.Debug.Assert(arrayDim > 0, this);
+			System.Diagnostics.Debug.Assert(arrayDim > 0, "arrayDim > 0");
 			return new GenericType(this, arrayDim - 1);
 		}
 

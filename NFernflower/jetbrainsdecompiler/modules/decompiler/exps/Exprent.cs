@@ -13,7 +13,7 @@ using Sharpen;
 
 namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 {
-	public class Exprent : IIMatchable
+	public class Exprent : IMatchable
 	{
 		public const int Multiple_Uses = 1;
 
@@ -166,7 +166,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 		// *****************************************************************************
 		// IMatchable implementation
 		// *****************************************************************************
-		public override IIMatchable FindObject(MatchNode matchNode, int index)
+		public override IMatchable FindObject(MatchNode matchNode, int index)
 		{
 			if (matchNode.GetType() != MatchNode.Matchnode_Exprent)
 			{

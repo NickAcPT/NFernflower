@@ -5,7 +5,7 @@ using Sharpen;
 
 namespace JetBrainsDecompiler.Main.Extern
 {
-	public abstract class IIFernflowerPreferences
+	public abstract class IFernflowerPreferences
 	{
 		public const string Remove_Bridge = "rbr";
 
@@ -81,17 +81,43 @@ namespace JetBrainsDecompiler.Main.Extern
 
 		public const string Line_Separator_Unx = "\n";
 
-		public const IDictionary<string, object> Defaults;
-
-		public abstract IDictionary<string, object> GetDefaults();
-
-		public IIFernflowerPreferences()
-		{
-			Defaults = GetDefaults();
-		}
-	}
-
-	public static class IFernflowerPreferencesConstants
-	{
+		public static Dictionary<string, object> Defaults = new Dictionary<string, object>
+			{
+				{Remove_Bridge, "1"},
+				{Remove_Synthetic, "0"},
+				{Decompile_Inner, "1"},
+				{Decompile_Class_1_4, "1"},
+				{Decompile_Assertions, "1"},
+				{Hide_Empty_Super, "1"},
+				{Hide_Default_Constructor, "1"},
+				{Decompile_Generic_Signatures, "0"},
+				{No_Exceptions_Return, "1"},
+				{Ensure_Synchronized_Monitor, "1"},
+				{Decompile_Enum, "1"},
+				{Remove_Get_Class_New, "1"},
+				{Literals_As_Is, "0"},
+				{Boolean_True_One, "1"},
+				{Ascii_String_Characters, "0"},
+				{Synthetic_Not_Set, "0"},
+				{Undefined_Param_Type_Object, "1"},
+				{Use_Debug_Var_Names, "1"},
+				{Use_Method_Parameters, "1"},
+				{Remove_Empty_Ranges, "1"},
+				{Finally_Deinline, "1"},
+				{Idea_Not_Null_Annotation, "1"},
+				{Lambda_To_Anonymous_Class, "0"},
+				{Bytecode_Source_Mapping, "0"},
+				{Ignore_Invalid_Bytecode, "0"},
+				{Verify_Anonymous_Classes, "0"},
+				{Log_Level, IFernflowerLogger.Severity.Info.name()},
+				{Max_Processing_Method, "0"},
+				{Rename_Entities, "0"},
+				{New_Line_Separator, (InterpreterUtil.Is_Windows ? "0" : "1")},
+				{Indent_String, "   "},
+				{Banner, ""},
+				{Unit_Test_Mode, "0"},
+				{Dump_Original_Lines, "0"}
+			};
 	}
 }
+

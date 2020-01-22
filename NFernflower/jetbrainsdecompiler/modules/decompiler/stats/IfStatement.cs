@@ -427,9 +427,9 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 		// *****************************************************************************
 		// IMatchable implementation
 		// *****************************************************************************
-		public override IIMatchable FindObject(MatchNode matchNode, int index)
+		public override IMatchable FindObject(MatchNode matchNode, int index)
 		{
-			IIMatchable @object = base.FindObject(matchNode, index);
+			IMatchable @object = base.FindObject(matchNode, index);
 			if (@object != null)
 			{
 				return @object;

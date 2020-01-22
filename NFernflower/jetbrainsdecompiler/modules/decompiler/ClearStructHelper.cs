@@ -10,7 +10,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 		public static void ClearStatements(RootStatement root)
 		{
 			LinkedList<Statement> stack = new LinkedList<Statement>();
-			stack.Add(root);
+			stack.AddLast(root);
 			while (!(stack.Count == 0))
 			{
 				Statement stat = Sharpen.Collections.RemoveFirst(stack);

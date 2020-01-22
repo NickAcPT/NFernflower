@@ -149,7 +149,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 		public override Statement GetSimpleCopy()
 		{
 			CatchAllStatement cas = new CatchAllStatement();
-			cas.isFinally = this.isFinally__;
+			cas.isFinally__ = this.isFinally__;
 			if (this.monitor != null)
 			{
 				cas.monitor = new VarExprent(DecompilerContext.GetCounterContainer().GetCounterAndIncrement

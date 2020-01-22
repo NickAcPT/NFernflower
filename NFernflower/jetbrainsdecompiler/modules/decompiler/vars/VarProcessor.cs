@@ -1,6 +1,7 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrainsDecompiler.Main.Collectors;
 using JetBrainsDecompiler.Modules.Decompiler.Stats;
 using JetBrainsDecompiler.Struct;
@@ -18,12 +19,12 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 
 		private readonly MethodDescriptor methodDescriptor;
 
-		private IDictionary<VarVersionPair, string> mapVarNames = new Dictionary<VarVersionPair
+		private Dictionary<VarVersionPair, string> mapVarNames = new Dictionary<VarVersionPair
 			, string>();
 
 		private VarVersionsProcessor varVersions;
 
-		private readonly IDictionary<VarVersionPair, string> thisVars = new Dictionary<VarVersionPair
+		private readonly Dictionary<VarVersionPair, string> thisVars = new Dictionary<VarVersionPair
 			, string>();
 
 		private readonly HashSet<VarVersionPair> externalVars = new HashSet<VarVersionPair
@@ -48,24 +49,24 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 			new VarDefinitionHelper(root, method, this).SetVarDefinitions();
 		}
 
-		public virtual void SetDebugVarNames(IDictionary<int, string> mapDebugVarNames)
+		public virtual void SetDebugVarNames(Dictionary<int, string> mapDebugVarNames)
 		{
 			if (varVersions == null)
 			{
 				return;
 			}
-			IDictionary<int, int> mapOriginalVarIndices = varVersions.GetMapOriginalVarIndices
+			Dictionary<int, int> mapOriginalVarIndices = varVersions.GetMapOriginalVarIndices
 				();
 			List<VarVersionPair> listVars = new List<VarVersionPair>(mapVarNames.Keys);
-			listVars.Sort(IComparer.ComparingInt((VarVersionPair o) => o.var));
-			IDictionary<string, int> mapNames = new Dictionary<string, int>();
+			listVars.Sort((pair, versionPair) => pair.var.CompareTo(versionPair.var));
+			Dictionary<string, int> mapNames = new Dictionary<string, int>();
 			foreach (VarVersionPair pair in listVars)
 			{
 				string name = mapVarNames.GetOrNull(pair);
 				int? index = mapOriginalVarIndices.GetOrNullable(pair.var);
 				if (index != null)
 				{
-					string debugName = mapDebugVarNames.GetOrNull(index);
+					string debugName = mapDebugVarNames.GetOrNull(index.Value);
 					if (debugName != null && TextUtil.IsValidIdentifier(debugName, method.GetClassStruct
 						().GetBytecodeVersion()))
 					{
@@ -73,8 +74,8 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 					}
 				}
 				int? counter = mapNames.GetOrNullable(name);
-				Sharpen.Collections.Put(mapNames, name, counter == null ? counter.Value = 0 : ++counter
-					.Value);
+				Sharpen.Collections.Put(mapNames, name, counter == null ? counter = 0 : ++counter
+					);
 				if (counter.Value > 0)
 				{
 					name += counter.ToString();
@@ -83,7 +84,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 			}
 		}
 
-		public virtual int GetVarOriginalIndex(int index)
+		public virtual int? GetVarOriginalIndex(int index)
 		{
 			if (varVersions == null)
 			{
@@ -94,7 +95,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 
 		public virtual void RefreshVarNames(VarNamesCollector vc)
 		{
-			IDictionary<VarVersionPair, string> tempVarNames = new Dictionary<VarVersionPair, 
+			Dictionary<VarVersionPair, string> tempVarNames = new Dictionary<VarVersionPair, 
 				string>(mapVarNames);
 			foreach (KeyValuePair<VarVersionPair, string> ent in tempVarNames)
 			{
@@ -129,7 +130,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 
 		public virtual ICollection<string> GetVarNames()
 		{
-			return mapVarNames != null ? mapVarNames.Values : new System.Collections.Generic.HashSet<
+			return mapVarNames != null ? mapVarNames.Values.ToHashSet() : new System.Collections.Generic.HashSet<
 				string>();
 		}
 
@@ -144,7 +145,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 			varVersions.SetVarFinal(pair, finalType);
 		}
 
-		public virtual IDictionary<VarVersionPair, string> GetThisVars()
+		public virtual Dictionary<VarVersionPair, string> GetThisVars()
 		{
 			return thisVars;
 		}

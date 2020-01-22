@@ -36,7 +36,7 @@ namespace JetBrainsDecompiler.Struct.Match
 
 		private readonly int type;
 
-		private readonly IDictionary<IMatchable.MatchProperties, MatchNode.RuleValue> rules
+		private readonly Dictionary<IMatchable.MatchProperties, MatchNode.RuleValue> rules
 			 = new Dictionary<IMatchable.MatchProperties, MatchNode.RuleValue>();
 
 		private readonly List<MatchNode> children = new List<MatchNode>();
@@ -67,7 +67,7 @@ namespace JetBrainsDecompiler.Struct.Match
 			return children;
 		}
 
-		public virtual IDictionary<IMatchable.MatchProperties, MatchNode.RuleValue> GetRules
+		public virtual Dictionary<IMatchable.MatchProperties, MatchNode.RuleValue> GetRules
 			()
 		{
 			return rules;

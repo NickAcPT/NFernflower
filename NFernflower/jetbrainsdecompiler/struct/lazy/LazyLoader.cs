@@ -13,7 +13,7 @@ namespace JetBrainsDecompiler.Struct.Lazy
 {
 	public class LazyLoader
 	{
-		private readonly IDictionary<string, LazyLoader.Link> mapClassLinks = new Dictionary
+		private readonly Dictionary<string, LazyLoader.Link> mapClassLinks = new Dictionary
 			<string, LazyLoader.Link>();
 
 		private readonly IIBytecodeProvider provider;
@@ -54,7 +54,7 @@ namespace JetBrainsDecompiler.Struct.Lazy
 			}
 			catch (IOException ex)
 			{
-				throw new Exception(ex);
+				throw;
 			}
 		}
 
@@ -122,7 +122,7 @@ namespace JetBrainsDecompiler.Struct.Lazy
 			}
 			catch (IOException ex)
 			{
-				throw new Exception(ex);
+				throw;
 			}
 		}
 

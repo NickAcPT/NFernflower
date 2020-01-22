@@ -1,5 +1,8 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
+
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrainsDecompiler.Modules.Decompiler;
 using JetBrainsDecompiler.Modules.Decompiler.Stats;
 using JetBrainsDecompiler.Util;
@@ -11,11 +14,11 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 	{
 		private List<Statement> lstReversePostOrderList;
 
-		private Dictionary<int, FastFixedSetFactory.FastFixedSet<int>> mapSupportPoints = 
-			new Dictionary<int, FastFixedSetFactory.FastFixedSet<int>>();
+		private Dictionary<int, FastFixedSetFactory<int>.FastFixedSet<int>> mapSupportPoints = 
+			new Dictionary<int, FastFixedSetFactory<int>.FastFixedSet<int>>();
 
-		private readonly Dictionary<int, FastFixedSetFactory.FastFixedSet<int>> mapExtPostdominators
-			 = new Dictionary<int, FastFixedSetFactory.FastFixedSet<int>>();
+		private readonly Dictionary<int, FastFixedSetFactory<int>.FastFixedSet<int>> mapExtPostdominators
+			 = new Dictionary<int, FastFixedSetFactory<int>.FastFixedSet<int>>();
 
 		private Statement statement;
 
@@ -43,10 +46,10 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 			filter.Initialize();
 			FilterOnExceptionRanges(filter);
 			FilterOnDominance(filter);
-			HashSet<KeyValuePair<int, FastFixedSetFactory.FastFixedSet<int>>> entries = mapExtPostdominators;
+			Dictionary<int, FastFixedSetFactory<int>.FastFixedSet<int>> entries = mapExtPostdominators;
 			Dictionary<int, HashSet<int>> res = new Dictionary<int, HashSet<int>>(entries.Count
 				);
-			foreach (KeyValuePair<int, FastFixedSetFactory.FastFixedSet<int>> entry in entries)
+			foreach (KeyValuePair<int, FastFixedSetFactory<int>.FastFixedSet<int>> entry in entries)
 			{
 				Sharpen.Collections.Put(res, entry.Key, entry.Value.ToPlainSet());
 			}
@@ -58,19 +61,19 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 			DominatorEngine engine = filter.GetDomEngine();
 			foreach (int head in new HashSet<int>(mapExtPostdominators.Keys))
 			{
-				FastFixedSetFactory.FastFixedSet<int> setPostdoms = mapExtPostdominators.GetOrNull
+				FastFixedSetFactory<int>.FastFixedSet<int> setPostdoms = mapExtPostdominators.GetOrNull
 					(head);
 				LinkedList<Statement> stack = new LinkedList<Statement>();
-				LinkedList<FastFixedSetFactory.FastFixedSet<int>> stackPath = new LinkedList<FastFixedSetFactory.FastFixedSet
+				LinkedList<FastFixedSetFactory<int>.FastFixedSet<int>> stackPath = new LinkedList<FastFixedSetFactory<int>.FastFixedSet
 					<int>>();
-				stack.Add(statement.GetStats().GetWithKey(head));
-				stackPath.Add(factory.SpawnEmptySet());
+				stack.AddLast(statement.GetStats().GetWithKey(head));
+				stackPath.AddLast(factory.SpawnEmptySet());
 				HashSet<Statement> setVisited = new HashSet<Statement>();
-				setVisited.Add(stack.GetFirst());
+				setVisited.Add(stack.First.Value);
 				while (!(stack.Count == 0))
 				{
 					Statement stat = Sharpen.Collections.RemoveFirst(stack);
-					FastFixedSetFactory.FastFixedSet<int> path = Sharpen.Collections.RemoveFirst(stackPath
+					FastFixedSetFactory<int>.FastFixedSet<int> path = Sharpen.Collections.RemoveFirst(stackPath
 						);
 					if (setPostdoms.Contains(stat.id))
 					{
@@ -90,8 +93,8 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 						Statement edge_destination = edge.GetDestination();
 						if (!setVisited.Contains(edge_destination))
 						{
-							stack.Add(edge_destination);
-							stackPath.Add(path.GetCopy());
+							stack.AddLast(edge_destination);
+							stackPath.AddLast(path.GetCopy());
 							setVisited.Add(edge_destination);
 						}
 					}
@@ -107,12 +110,12 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 		{
 			foreach (int head in new HashSet<int>(mapExtPostdominators.Keys))
 			{
-				FastFixedSetFactory.FastFixedSet<int> set = mapExtPostdominators.GetOrNull(head);
-				for (IEnumerator<int> it = set.GetEnumerator(); it.MoveNext(); )
+				FastFixedSetFactory<int>.FastFixedSet<int> set = mapExtPostdominators.GetOrNull(head);
+				foreach (var it in set.ToList())
 				{
-					if (!filter.AcceptStatementPair(head, it.Current))
+					if (!filter.AcceptStatementPair(head, it))
 					{
-						it.Remove();
+						set.Remove(it);
 					}
 				}
 				if (set.IsEmpty())
@@ -124,17 +127,16 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 
 		private void RemoveErroneousNodes()
 		{
-			mapSupportPoints = new Dictionary<int, FastFixedSetFactory.FastFixedSet<int>>();
+			mapSupportPoints = new Dictionary<int, FastFixedSetFactory<int>.FastFixedSet<int>>();
 			CalcReachabilitySuppPoints(StatEdge.Type_Regular);
-			IterateReachability((Statement node, Dictionary<int, FastFixedSetFactory.FastFixedSet
+			IterateReachability((Statement node, Dictionary<int, FastFixedSetFactory<int>.FastFixedSet
 				<int>> mapSets) => 			{
 				int nodeid = node.id;
-				FastFixedSetFactory.FastFixedSet<int> setReachability = mapSets.GetOrNull(nodeid);
-				List<FastFixedSetFactory.FastFixedSet<int>> lstPredSets = new List<FastFixedSetFactory.FastFixedSet
-					<int>>();
+				FastFixedSetFactory<int>.FastFixedSet<int> setReachability = mapSets.GetOrNull(nodeid);
+				List<FastFixedSetFactory<int>.FastFixedSet<int>> lstPredSets = new List<FastFixedSetFactory<int>.FastFixedSet<int>>();
 				foreach (StatEdge prededge in node.GetPredecessorEdges(StatEdge.Type_Regular))
 				{
-					FastFixedSetFactory.FastFixedSet<int> setPred = mapSets.GetOrNull(prededge.GetSource
+					FastFixedSetFactory<int>.FastFixedSet<int> setPred = mapSets.GetOrNull(prededge.GetSource
 						().id);
 					if (setPred == null)
 					{
@@ -145,11 +147,11 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 				}
 				foreach (int id in setReachability)
 				{
-					FastFixedSetFactory.FastFixedSet<int> setReachabilityCopy = setReachability.GetCopy
+					FastFixedSetFactory<int>.FastFixedSet<int> setReachabilityCopy = setReachability.GetCopy
 						();
-					FastFixedSetFactory.FastFixedSet<int> setIntersection = factory.SpawnEmptySet();
+					FastFixedSetFactory<int>.FastFixedSet<int> setIntersection = factory.SpawnEmptySet();
 					bool isIntersectionInitialized = false;
-					foreach (FastFixedSetFactory.FastFixedSet<int> predset in lstPredSets)
+					foreach (FastFixedSetFactory<int>.FastFixedSet<int> predset in lstPredSets)
 					{
 						if (predset.Contains(id))
 						{
@@ -180,7 +182,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 , StatEdge.Type_Regular);
 			// exception handlers cannot be postdominator nodes
 			// TODO: replace with a standard set?
-			FastFixedSetFactory.FastFixedSet<int> setHandlers = factory.SpawnEmptySet();
+			FastFixedSetFactory<int>.FastFixedSet<int> setHandlers = factory.SpawnEmptySet();
 			bool handlerfound = false;
 			foreach (Statement stat in statement.GetStats())
 			{
@@ -194,7 +196,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 			}
 			if (handlerfound)
 			{
-				foreach (FastFixedSetFactory.FastFixedSet<int> set in mapExtPostdominators.Values)
+				foreach (FastFixedSetFactory<int>.FastFixedSet<int> set in mapExtPostdominators.Values)
 				{
 					set.Complement(setHandlers);
 				}
@@ -209,10 +211,10 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 			{
 				Sharpen.Collections.Put(mapExtPostdominators, stat.id, factory.SpawnEmptySet());
 			}
-			IterateReachability((Statement node, Dictionary<int, FastFixedSetFactory.FastFixedSet
+			IterateReachability((Statement node, Dictionary<int, FastFixedSetFactory<int>.FastFixedSet
 				<int>> mapSets) => 			{
 				int nodeid = node.id;
-				FastFixedSetFactory.FastFixedSet<int> setReachability = mapSets.GetOrNull(nodeid);
+				FastFixedSetFactory<int>.FastFixedSet<int> setReachability = mapSets.GetOrNull(nodeid);
 				foreach (int id in setReachability)
 				{
 					mapExtPostdominators.GetOrNull(id).Add(nodeid);
@@ -224,7 +226,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 
 		private void CalcReachabilitySuppPoints(int edgetype)
 		{
-			IterateReachability((Statement node, Dictionary<int, FastFixedSetFactory.FastFixedSet
+			IterateReachability((Statement node, Dictionary<int, FastFixedSetFactory<int>.FastFixedSet
 				<int>> mapSets) => 			{
 				// consider to be a support point
 				foreach (StatEdge sucedge in node.GetAllSuccessorEdges())
@@ -233,7 +235,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 					{
 						if (mapSets.ContainsKey(sucedge.GetDestination().id))
 						{
-							FastFixedSetFactory.FastFixedSet<int> setReachability = mapSets.GetOrNull(node.id
+							FastFixedSetFactory<int>.FastFixedSet<int> setReachability = mapSets.GetOrNull(node.id
 								);
 							if (!InterpreterUtil.EqualObjects(setReachability, mapSupportPoints.GetOrNull(node
 								.id)))
@@ -249,24 +251,23 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 , edgetype);
 		}
 
-		private void IterateReachability(FastExtendedPostdominanceHelper.IIReachabilityAction
-			 action, int edgetype)
+		private void IterateReachability(Func<Statement, Dictionary<int, FastFixedSetFactory<int>.FastFixedSet<int>>, bool> action, int edgetype)
 		{
 			while (true)
 			{
 				bool iterate = false;
-				Dictionary<int, FastFixedSetFactory.FastFixedSet<int>> mapSets = new Dictionary<int
-					, FastFixedSetFactory.FastFixedSet<int>>();
+				Dictionary<int, FastFixedSetFactory<int>.FastFixedSet<int>> mapSets = new Dictionary<int
+					, FastFixedSetFactory<int>.FastFixedSet<int>>();
 				foreach (Statement stat in lstReversePostOrderList)
 				{
-					FastFixedSetFactory.FastFixedSet<int> set = factory.SpawnEmptySet();
+					FastFixedSetFactory<int>.FastFixedSet<int> set = factory.SpawnEmptySet();
 					set.Add(stat.id);
 					foreach (StatEdge prededge in stat.GetAllPredecessorEdges())
 					{
 						if ((prededge.GetType() & edgetype) != 0)
 						{
 							Statement pred = prededge.GetSource();
-							FastFixedSetFactory.FastFixedSet<int> setPred = mapSets.GetOrNull(pred.id);
+							FastFixedSetFactory<int>.FastFixedSet<int> setPred = mapSets.GetOrNull(pred.id);
 							if (setPred == null)
 							{
 								setPred = mapSupportPoints.GetOrNull(pred.id);
@@ -280,7 +281,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 					Sharpen.Collections.Put(mapSets, stat.id, set);
 					if (action != null)
 					{
-						iterate |= action.Action(stat, mapSets);
+						iterate |= action.Invoke(stat, mapSets);
 					}
 					// remove reachability information of fully processed nodes (saves memory)
 					foreach (StatEdge prededge in stat.GetAllPredecessorEdges())
@@ -317,9 +318,9 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Decompose
 			}
 		}
 
-		private interface IIReachabilityAction
+		private interface IReachabilityAction
 		{
-			bool Action(Statement node, Dictionary<int, FastFixedSetFactory.FastFixedSet<int>
+			bool Action(Statement node, Dictionary<int, FastFixedSetFactory<int>.FastFixedSet<int>
 				> mapSets);
 		}
 	}

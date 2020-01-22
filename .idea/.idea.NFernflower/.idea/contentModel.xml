@@ -8,6 +8,46 @@
       <e p="NFernflower" t="IncludeRecursive">
         <e p=".gitignore" t="Include" />
         <e p="bin" t="ExcludeRecursive" />
+        <e p="Java" t="Include">
+          <e p="IO" t="Include">
+            <e p="Closeable.cs" t="Include" />
+            <e p="DataInput.cs" t="Include" />
+            <e p="DataInputStream.cs" t="Include" />
+            <e p="DataOutput.cs" t="Include" />
+            <e p="DataOutputStream.cs" t="Include" />
+            <e p="EOFException.cs" t="Include" />
+            <e p="FilterInputStream.cs" t="Include" />
+            <e p="FilterOutputStream.cs" t="Include" />
+            <e p="InputStream.cs" t="Include" />
+            <e p="InternalError.cs" t="Include" />
+            <e p="ObjectStreamField.cs" t="Include" />
+            <e p="OutputStream.cs" t="Include" />
+            <e p="PushbackInputStream.cs" t="Include" />
+            <e p="UTFDataFormatException.cs" t="Include" />
+          </e>
+          <e p="Lang" t="Include">
+            <e p="AssertionError.cs" t="Include" />
+            <e p="AutoCloseable.cs" t="Include" />
+          </e>
+          <e p="Nio" t="Include">
+            <e p="Buffer.cs" t="Include" />
+            <e p="ByteBuffer.cs" t="Include" />
+            <e p="ByteOrder.cs" t="Include" />
+            <e p="HeapLongBuffer.cs" t="Include" />
+            <e p="HeapLongBufferR.cs" t="Include" />
+            <e p="LongBuffer.cs" t="Include" />
+            <e p="MemoryInputStream.cs" t="Include" />
+            <e p="MemoryOutputStream.cs" t="Include" />
+          </e>
+          <e p="util" t="Include">
+            <e p="BitSet.cs" t="Include" />
+            <e p="jar" t="Include">
+              <e p="Attributes.cs" t="Include" />
+              <e p="Manifest.cs" t="Include" />
+            </e>
+            <e p="Spliterator.cs" t="Include" />
+          </e>
+        </e>
         <e p="jetbrainsdecompiler" t="Include">
           <e p="code" t="Include">
             <e p="cfg" t="Include">
@@ -49,8 +89,9 @@
             <e p="EnumProcessor.cs" t="Include" />
             <e p="extern" t="Include">
               <e p="IFernflowerLogger.cs" t="Include" />
+              <e p="IFernflowerPreferences.cs" t="Include" />
               <e p="IIBytecodeProvider.cs" t="Include" />
-              <e p="IIFernflowerPreferences.cs" t="Include" />
+              <e p="IIdentifierRenamer.cs" t="Include" />
               <e p="IIIdentifierRenamer.cs" t="Include" />
               <e p="IIResultSaver.cs" t="Include" />
             </e>
@@ -79,8 +120,8 @@
                 <e p="DominatorTreeExceptionFilter.cs" t="Include" />
                 <e p="FastExtendedPostdominanceHelper.cs" t="Include" />
                 <e p="GenericDominatorEngine.cs" t="Include" />
+                <e p="IGraphNode.cs" t="Include" />
                 <e p="IIGraph.cs" t="Include" />
-                <e p="IIGraphNode.cs" t="Include" />
               </e>
               <e p="deobfuscator" t="Include">
                 <e p="ExceptionDeobfuscator.cs" t="Include" />
@@ -210,7 +251,7 @@
               <e p="LazyLoader.cs" t="Include" />
             </e>
             <e p="match" t="Include">
-              <e p="IIMatchable.cs" t="Include" />
+              <e p="IMatchable.cs" t="Include" />
               <e p="MatchEngine.cs" t="Include" />
               <e p="MatchNode.cs" t="Include" />
             </e>

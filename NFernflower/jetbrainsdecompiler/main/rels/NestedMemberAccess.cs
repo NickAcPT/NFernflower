@@ -52,7 +52,7 @@ namespace JetBrainsDecompiler.Main.Rels
 
 		private bool noSynthFlag;
 
-		private readonly IDictionary<MethodWrapper, NestedMemberAccess.MethodAccess> mapMethodType
+		private readonly Dictionary<MethodWrapper, NestedMemberAccess.MethodAccess> mapMethodType
 			 = new Dictionary<MethodWrapper, NestedMemberAccess.MethodAccess>();
 
 		public virtual void PropagateMemberAccess(ClassesProcessor.ClassNode root)
@@ -61,7 +61,7 @@ namespace JetBrainsDecompiler.Main.Rels
 			{
 				return;
 			}
-			noSynthFlag = DecompilerContext.GetOption(IIFernflowerPreferences.Synthetic_Not_Set
+			noSynthFlag = DecompilerContext.GetOption(IFernflowerPreferences.Synthetic_Not_Set
 				);
 			ComputeMethodTypes(root);
 			EliminateStaticAccess(root);
@@ -290,7 +290,7 @@ namespace JetBrainsDecompiler.Main.Rels
 					DirectGraph graph = meth.GetOrBuildGraph();
 					HashSet<DirectNode> setVisited = new HashSet<DirectNode>();
 					LinkedList<DirectNode> stack = new LinkedList<DirectNode>();
-					stack.Add(graph.first);
+					stack.AddLast(graph.first);
 					while (!(stack.Count == 0))
 					{
 						// TODO: replace with interface iterator?

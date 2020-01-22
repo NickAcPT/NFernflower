@@ -16,7 +16,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 {
 	public class ConstExprent : Exprent
 	{
-		private static readonly IDictionary<int, string> Char_Escapes;
+		private static readonly Dictionary<int, string> Char_Escapes;
 
 		static ConstExprent()
 		{
@@ -124,9 +124,9 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 
 		public override TextBuffer ToJava(int indent, BytecodeMappingTracer tracer)
 		{
-			bool literal = DecompilerContext.GetOption(IIFernflowerPreferences.Literals_As_Is
+			bool literal = DecompilerContext.GetOption(IFernflowerPreferences.Literals_As_Is
 				);
-			bool ascii = DecompilerContext.GetOption(IIFernflowerPreferences.Ascii_String_Characters
+			bool ascii = DecompilerContext.GetOption(IFernflowerPreferences.Ascii_String_Characters
 				);
 			tracer.AddMapping(bytecode);
 			if (constType.type != ICodeConstants.Type_Null && value == null)
@@ -137,7 +137,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 			{
 				case ICodeConstants.Type_Boolean:
 				{
-					return new TextBuffer(bool.ToString((int)value != 0));
+					return new TextBuffer(((int)value != 0).ToString());
 				}
 
 				case ICodeConstants.Type_Char:
@@ -337,42 +337,42 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 						break;
 					}
 
-					case unchecked((int)(0x8)):
+					case (char)unchecked((int)(0x8)):
 					{
 						// "\\\\b");  //  u0008: backspace BS
 						buffer.Append("\\b");
 						break;
 					}
 
-					case unchecked((int)(0x9)):
+					case (char)unchecked((int)(0x9)):
 					{
 						//"\\\\t");  //  u0009: horizontal tab HT
 						buffer.Append("\\t");
 						break;
 					}
 
-					case unchecked((int)(0xA)):
+					case (char)unchecked((int)(0xA)):
 					{
 						//"\\\\n");  //  u000a: linefeed LF
 						buffer.Append("\\n");
 						break;
 					}
 
-					case unchecked((int)(0xC)):
+					case (char)unchecked((int)(0xC)):
 					{
 						//"\\\\f");  //  u000c: form feed FF
 						buffer.Append("\\f");
 						break;
 					}
 
-					case unchecked((int)(0xD)):
+					case (char)unchecked((int)(0xD)):
 					{
 						//"\\\\r");  //  u000d: carriage return CR
 						buffer.Append("\\r");
 						break;
 					}
 
-					case unchecked((int)(0x22)):
+					case (char)unchecked((int)(0x22)):
 					{
 						//"\\\\\""); // u0022: double quote "
 						buffer.Append("\\\"");
@@ -434,7 +434,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 				case ICodeConstants.Type_Int:
 				{
 					int value = (int)this.value;
-					return value == 0 || (DecompilerContext.GetOption(IIFernflowerPreferences.Boolean_True_One
+					return value == 0 || (DecompilerContext.GetOption(IFernflowerPreferences.Boolean_True_One
 						) && value == 1);
 				}
 			}

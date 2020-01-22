@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using JetBrainsDecompiler.Modules.Decompiler.Exps;
 using JetBrainsDecompiler.Modules.Decompiler.Stats;
 using Sharpen;
+using System.Linq;
 
 namespace JetBrainsDecompiler.Modules.Decompiler
 {
@@ -34,8 +35,8 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			}
 			foreach (Statement stat in handlers)
 			{
-				if (!all.Contains(stat) || !all.ContainsAll(stat.GetNeighbours(StatEdge.Type_Exception
-					, Statement.Direction_Backward)))
+				if (!all.Contains(stat) || !(stat.GetNeighbours(StatEdge.Type_Exception
+					    , Statement.Direction_Backward).All(all.Contains)))
 				{
 					return false;
 				}
@@ -53,7 +54,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			return true;
 		}
 
-		public static bool IsChoiceStatement<_T0>(Statement head, List<_T0> lst)
+		public static bool IsChoiceStatement(Statement head, List<Statement> lst)
 		{
 			Statement post = null;
 			HashSet<Statement> setDest = head.GetNeighboursSet(StatEdge.Type_Regular, Statement
@@ -90,7 +91,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 					{
 						return false;
 					}
-					if (!setDest.ContainsAll(setPred) || setPred.Count > 1)
+					if (!setPred.All(setDest.Contains) || setPred.Count > 1)
 					{
 						if (post == null)
 						{
@@ -200,7 +201,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 		{
 			HashSet<Statement> setHandlers = new HashSet<Statement>(head.GetNeighbours(StatEdge
 				.Type_Exception, Statement.Direction_Forward));
-			setHandlers.RemoveIf((Statement statement) => statement.GetPredecessorEdges(StatEdge
+			setHandlers.RemoveWhere((Statement statement) => statement.GetPredecessorEdges(StatEdge
 				.Type_Exception).Count > 1);
 			return setHandlers;
 		}

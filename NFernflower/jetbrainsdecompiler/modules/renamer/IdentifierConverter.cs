@@ -15,7 +15,7 @@ namespace JetBrainsDecompiler.Modules.Renamer
 	{
 		private readonly StructContext context;
 
-		private readonly IIIdentifierRenamer helper;
+		private readonly IIdentifierRenamer helper;
 
 		private readonly PoolInterceptor interceptor;
 
@@ -23,10 +23,10 @@ namespace JetBrainsDecompiler.Modules.Renamer
 
 		private List<ClassWrapperNode> rootInterfaces = new List<ClassWrapperNode>();
 
-		private IDictionary<string, IDictionary<string, string>> interfaceNameMaps = new 
-			Dictionary<string, IDictionary<string, string>>();
+		private Dictionary<string, Dictionary<string, string>> interfaceNameMaps = new 
+			Dictionary<string, Dictionary<string, string>>();
 
-		public IdentifierConverter(StructContext context, IIIdentifierRenamer helper, PoolInterceptor
+		public IdentifierConverter(StructContext context, IIdentifierRenamer helper, PoolInterceptor
 			 interceptor)
 		{
 			this.context = context;
@@ -54,16 +54,16 @@ namespace JetBrainsDecompiler.Modules.Renamer
 		{
 			List<ClassWrapperNode> lstClasses = GetReversePostOrderListIterative(rootClasses
 				);
-			IDictionary<string, IDictionary<string, string>> classNameMaps = new Dictionary<string
-				, IDictionary<string, string>>();
+			Dictionary<string, Dictionary<string, string>> classNameMaps = new Dictionary<string
+				, Dictionary<string, string>>();
 			foreach (ClassWrapperNode node in lstClasses)
 			{
 				StructClass cl = node.GetClassStruct();
-				IDictionary<string, string> names = new Dictionary<string, string>();
+				Dictionary<string, string> names = new Dictionary<string, string>();
 				// merge information on super class
 				if (cl.superClass != null)
 				{
-					IDictionary<string, string> mapClass = classNameMaps.GetOrNull(cl.superClass.GetString
+					Dictionary<string, string> mapClass = classNameMaps.GetOrNull(cl.superClass.GetString
 						());
 					if (mapClass != null)
 					{
@@ -73,7 +73,7 @@ namespace JetBrainsDecompiler.Modules.Renamer
 				// merge information on interfaces
 				foreach (string ifName in cl.GetInterfaceNames())
 				{
-					IDictionary<string, string> mapInt = interfaceNameMaps.GetOrNull(ifName);
+					Dictionary<string, string> mapInt = interfaceNameMaps.GetOrNull(ifName);
 					if (mapInt != null)
 					{
 						Sharpen.Collections.PutAll(names, mapInt);
@@ -95,12 +95,12 @@ namespace JetBrainsDecompiler.Modules.Renamer
 			}
 		}
 
-		private IDictionary<string, string> ProcessExternalInterface(StructClass cl)
+		private Dictionary<string, string> ProcessExternalInterface(StructClass cl)
 		{
-			IDictionary<string, string> names = new Dictionary<string, string>();
+			Dictionary<string, string> names = new Dictionary<string, string>();
 			foreach (string ifName in cl.GetInterfaceNames())
 			{
-				IDictionary<string, string> mapInt = interfaceNameMaps.GetOrNull(ifName);
+				Dictionary<string, string> mapInt = interfaceNameMaps.GetOrNull(ifName);
 				if (mapInt != null)
 				{
 					Sharpen.Collections.PutAll(names, mapInt);
@@ -122,17 +122,17 @@ namespace JetBrainsDecompiler.Modules.Renamer
 		{
 			List<ClassWrapperNode> lstInterfaces = GetReversePostOrderListIterative(rootInterfaces
 				);
-			IDictionary<string, IDictionary<string, string>> interfaceNameMaps = new Dictionary
-				<string, IDictionary<string, string>>();
+			Dictionary<string, Dictionary<string, string>> interfaceNameMaps = new Dictionary
+				<string, Dictionary<string, string>>();
 			// rename methods and fields
 			foreach (ClassWrapperNode node in lstInterfaces)
 			{
 				StructClass cl = node.GetClassStruct();
-				IDictionary<string, string> names = new Dictionary<string, string>();
+				Dictionary<string, string> names = new Dictionary<string, string>();
 				// merge information on super interfaces
 				foreach (string ifName in cl.GetInterfaceNames())
 				{
-					IDictionary<string, string> mapInt = interfaceNameMaps.GetOrNull(ifName);
+					Dictionary<string, string> mapInt = interfaceNameMaps.GetOrNull(ifName);
 					if (mapInt != null)
 					{
 						Sharpen.Collections.PutAll(names, mapInt);
@@ -183,7 +183,7 @@ namespace JetBrainsDecompiler.Modules.Renamer
 			}
 		}
 
-		private void RenameClassIdentifiers(StructClass cl, IDictionary<string, string> names
+		private void RenameClassIdentifiers(StructClass cl, Dictionary<string, string> names
 			)
 		{
 			// all classes are already renamed
@@ -299,12 +299,12 @@ namespace JetBrainsDecompiler.Modules.Renamer
 			HashSet<ClassWrapperNode> setVisited = new HashSet<ClassWrapperNode>();
 			foreach (ClassWrapperNode root in roots)
 			{
-				stackNode.Add(root);
-				stackIndex.Add(0);
+				stackNode.AddLast(root);
+				stackIndex.AddLast(0);
 			}
 			while (!(stackNode.Count == 0))
 			{
-				ClassWrapperNode node = stackNode.GetLast();
+				ClassWrapperNode node = stackNode.Last.Value;
 				int index = Sharpen.Collections.RemoveLast(stackIndex);
 				setVisited.Add(node);
 				List<ClassWrapperNode> lstSubs = node.GetSubclasses();
@@ -313,9 +313,9 @@ namespace JetBrainsDecompiler.Modules.Renamer
 					ClassWrapperNode sub = lstSubs[index];
 					if (!setVisited.Contains(sub))
 					{
-						stackIndex.Add(index + 1);
-						stackNode.Add(sub);
-						stackIndex.Add(0);
+						stackIndex.AddLast(index + 1);
+						stackNode.AddLast(sub);
+						stackIndex.AddLast(0);
 						break;
 					}
 				}
@@ -330,9 +330,9 @@ namespace JetBrainsDecompiler.Modules.Renamer
 
 		private void BuildInheritanceTree()
 		{
-			IDictionary<string, ClassWrapperNode> nodes = new Dictionary<string, ClassWrapperNode
+			Dictionary<string, ClassWrapperNode> nodes = new Dictionary<string, ClassWrapperNode
 				>();
-			IDictionary<string, StructClass> classes = context.GetClasses();
+			Dictionary<string, StructClass> classes = context.GetClasses();
 			List<ClassWrapperNode> rootClasses = new List<ClassWrapperNode>();
 			List<ClassWrapperNode> rootInterfaces = new List<ClassWrapperNode>();
 			foreach (StructClass cl in classes.Values)
@@ -343,8 +343,8 @@ namespace JetBrainsDecompiler.Modules.Renamer
 				}
 				LinkedList<StructClass> stack = new LinkedList<StructClass>();
 				LinkedList<ClassWrapperNode> stackSubNodes = new LinkedList<ClassWrapperNode>();
-				stack.Add(cl);
-				stackSubNodes.Add(null);
+				stack.AddLast(cl);
+				stackSubNodes.AddLast((ClassWrapperNode) null);
 				while (!(stack.Count == 0))
 				{
 					StructClass clStr = Sharpen.Collections.RemoveFirst(stack);
@@ -375,8 +375,8 @@ namespace JetBrainsDecompiler.Modules.Renamer
 								StructClass clParent = classes.GetOrNull(ifName);
 								if (clParent != null)
 								{
-									stack.Add(clParent);
-									stackSubNodes.Add(node);
+									stack.AddLast(clParent);
+									stackSubNodes.AddLast(node);
 									found_parent = true;
 								}
 							}
@@ -387,8 +387,8 @@ namespace JetBrainsDecompiler.Modules.Renamer
 							StructClass clParent = classes.GetOrNull(clStr.superClass.GetString());
 							if (clParent != null)
 							{
-								stack.Add(clParent);
-								stackSubNodes.Add(node);
+								stack.AddLast(clParent);
+								stackSubNodes.AddLast(node);
 								found_parent = true;
 							}
 						}

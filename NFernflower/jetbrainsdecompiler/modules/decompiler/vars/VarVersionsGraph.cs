@@ -40,8 +40,8 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 				{
 					return true;
 				}
-				List<VarVersionNode> lstNodes = new LinkedList<VarVersionNode>();
-				lstNodes.Add(node);
+				LinkedList<VarVersionNode> lstNodes = new LinkedList<VarVersionNode>();
+				lstNodes.AddLast(node);
 				while (!(lstNodes.Count == 0))
 				{
 					VarVersionNode nd = lstNodes.RemoveAtReturningValue(0);
@@ -62,7 +62,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 						VarVersionNode pred = edge.source;
 						if (!marked.Contains(pred) && !domnodes.Contains(pred))
 						{
-							lstNodes.Add(pred);
+							lstNodes.AddLast(pred);
 						}
 					}
 				}
@@ -91,45 +91,45 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 				this.roots = roots;
 			}
 
-			public List<IIGraphNode> GetReversePostOrderList()
+			public LinkedList<IGraphNode> GetReversePostOrderList()
 			{
 				return VarVersionsGraph.GetReversedPostOrder(roots);
 			}
 
-			public HashSet<IIGraphNode> GetRoots()
+			public HashSet<IGraphNode> GetRoots()
 			{
-				return new HashSet<IIGraphNode>(roots);
+				return new HashSet<IGraphNode>(roots);
 			}
 
 			private readonly HashSet<VarVersionNode> roots;
 		}
 
-		private static List<VarVersionNode> GetReversedPostOrder(ICollection<VarVersionNode
+		private static LinkedList<IGraphNode> GetReversedPostOrder(ICollection<VarVersionNode
 			> roots)
 		{
-			List<VarVersionNode> lst = new LinkedList<VarVersionNode>();
+			LinkedList<IGraphNode> lst = new LinkedList<IGraphNode>();
 			HashSet<VarVersionNode> setVisited = new HashSet<VarVersionNode>();
 			foreach (VarVersionNode root in roots)
 			{
-				List<VarVersionNode> lstTemp = new LinkedList<VarVersionNode>();
+				LinkedList<VarVersionNode> lstTemp = new LinkedList<VarVersionNode>();
 				AddToReversePostOrderListIterative(root, lstTemp, setVisited);
 				Sharpen.Collections.AddAll(lst, lstTemp);
 			}
 			return lst;
 		}
 
-		private static void AddToReversePostOrderListIterative<_T0, _T0>(VarVersionNode root
-			, List<_T0> lst, HashSet<_T0> setVisited)
+		private static void AddToReversePostOrderListIterative(VarVersionNode root
+			, LinkedList<VarVersionNode> lst, HashSet<VarVersionNode> setVisited)
 		{
-			IDictionary<VarVersionNode, List<VarVersionEdge>> mapNodeSuccs = new Dictionary<
+			Dictionary<VarVersionNode, List<VarVersionEdge>> mapNodeSuccs = new Dictionary<
 				VarVersionNode, List<VarVersionEdge>>();
 			LinkedList<VarVersionNode> stackNode = new LinkedList<VarVersionNode>();
 			LinkedList<int> stackIndex = new LinkedList<int>();
-			stackNode.Add(root);
-			stackIndex.Add(0);
+			stackNode.AddLast(root);
+			stackIndex.AddLast(0);
 			while (!(stackNode.Count == 0))
 			{
-				VarVersionNode node = stackNode.GetLast();
+				VarVersionNode node = stackNode.Last.Value;
 				int index = Sharpen.Collections.RemoveLast(stackIndex);
 				setVisited.Add(node);
 				List<VarVersionEdge> lstSuccs = mapNodeSuccs.ComputeIfAbsent(node, (VarVersionNode
@@ -139,15 +139,15 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 					VarVersionNode succ = lstSuccs[index].dest;
 					if (!setVisited.Contains(succ))
 					{
-						stackIndex.Add(index + 1);
-						stackNode.Add(succ);
-						stackIndex.Add(0);
+						stackIndex.AddLast(index + 1);
+						stackNode.AddLast(succ);
+						stackIndex.AddLast(0);
 						break;
 					}
 				}
 				if (index == lstSuccs.Count)
 				{
-					lst.Add(0, node);
+					lst.AddFirst(node);
 					Sharpen.Collections.RemoveLast(stackNode);
 				}
 			}

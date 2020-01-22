@@ -1,5 +1,6 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System.Collections.Generic;
+using System.Linq;
 using JetBrainsDecompiler.Modules.Decompiler;
 using JetBrainsDecompiler.Modules.Decompiler.Stats;
 using Sharpen;
@@ -18,7 +19,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Deobfuscator
 				{
 					return false;
 				}
-				Sharpen.Collections.Put(mapNodes, stat.id, new _T989645285(this, stat.id));
+				Sharpen.Collections.Put(mapNodes, stat.id, new _T989645285(stat.id));
 			}
 			// connecting nodes
 			foreach (Statement stat in statement.GetStats())
@@ -91,13 +92,10 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Deobfuscator
 
 			public readonly HashSet<_T989645285> succs = new HashSet<_T989645285>();
 
-			internal _T989645285(IrreducibleCFGDeobfuscator _enclosing, int id)
+			internal _T989645285(int id)
 			{
-				this._enclosing = _enclosing;
 				this.id = id;
 			}
-
-			private readonly IrreducibleCFGDeobfuscator _enclosing;
 		}
 
 		// reducible iff one node remains
@@ -177,7 +175,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Deobfuscator
 			}
 			else
 			{
-				res = statement.GetStats().Stream().MapToInt(IrreducibleCFGDeobfuscator).Sum();
+				res = statement.GetStats().Select(IrreducibleCFGDeobfuscator.GetStatementSize).Sum();
 			}
 			return res;
 		}

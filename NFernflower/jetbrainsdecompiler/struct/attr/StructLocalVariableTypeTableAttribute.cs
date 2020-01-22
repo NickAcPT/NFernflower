@@ -31,7 +31,7 @@ namespace JetBrainsDecompiler.Struct.Attr
 			backingAttribute.Add(attr.backingAttribute);
 		}
 
-		public virtual string GetSignature(int index, int visibleOffset)
+		public virtual string GetSignature(int? index, int visibleOffset)
 		{
 			return backingAttribute.GetDescriptor(index, visibleOffset);
 		}

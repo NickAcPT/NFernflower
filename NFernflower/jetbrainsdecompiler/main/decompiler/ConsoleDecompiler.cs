@@ -2,13 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Java.IO;
-using Java.Nio.Charset;
+using ICSharpCode.SharpZipLib.Zip;
 using Java.Util.Jar;
-using Java.Util.Zip;
 using JetBrainsDecompiler.Main;
 using JetBrainsDecompiler.Main.Extern;
 using JetBrainsDecompiler.Util;
+using ObjectWeb.Misc.Java.IO;
+using ObjectWeb.Misc.Java.Nio;
 using Sharpen;
 
 namespace JetBrainsDecompiler.Main.Decompiler
@@ -24,9 +24,9 @@ namespace JetBrainsDecompiler.Main.Decompiler
 					);
 				return;
 			}
-			IDictionary<string, object> mapOptions = new Dictionary<string, object>();
-			List<File> sources = new List<File>();
-			List<File> libraries = new List<File>();
+			Dictionary<string, object> mapOptions = new Dictionary<string, object>();
+			List<FileSystemInfo> sources = new List<FileSystemInfo>();
+			List<FileSystemInfo> libraries = new List<FileSystemInfo>();
 			bool isOption = true;
 			for (int i = 0; i < args.Length - 1; ++i)
 			{
@@ -63,31 +63,34 @@ namespace JetBrainsDecompiler.Main.Decompiler
 				System.Console.Out.WriteLine("error: no sources given");
 				return;
 			}
-			File destination = new File(args[args.Length - 1]);
+			FileSystemInfo destination = new DirectoryInfo(args[args.Length - 1]);
+			/*
+			 TODO: Add this check back
 			if (!destination.IsDirectory())
 			{
 				System.Console.Out.WriteLine("error: destination '" + destination + "' is not a directory"
 					);
 				return;
 			}
+			*/
 			PrintStreamLogger logger = new PrintStreamLogger(System.Console.Out);
 			ConsoleDecompiler decompiler = new ConsoleDecompiler(destination, mapOptions, logger
 				);
-			foreach (File library in libraries)
+			foreach (FileSystemInfo library in libraries)
 			{
 				decompiler.AddLibrary(library);
 			}
-			foreach (File source in sources)
+			foreach (FileSystemInfo source in sources)
 			{
 				decompiler.AddSource(source);
 			}
 			decompiler.DecompileContext();
 		}
 
-		private static void AddPath<_T0>(List<_T0> list, string path)
+		private static void AddPath(List<FileSystemInfo> list, string path)
 		{
-			File file = new File(path);
-			if (file.Exists())
+			FileSystemInfo file = new DirectoryInfo(path);
+			if (file.Exists)
 			{
 				list.Add(file);
 			}
@@ -97,17 +100,17 @@ namespace JetBrainsDecompiler.Main.Decompiler
 			}
 		}
 
-		private readonly File root;
+		private readonly FileSystemInfo root;
 
 		private readonly Fernflower engine;
 
-		private readonly IDictionary<string, ZipOutputStream> mapArchiveStreams = new Dictionary
+		private readonly Dictionary<string, ZipOutputStream> mapArchiveStreams = new Dictionary
 			<string, ZipOutputStream>();
 
-		private readonly IDictionary<string, HashSet<string>> mapArchiveEntries = new Dictionary
+		private readonly Dictionary<string, HashSet<string>> mapArchiveEntries = new Dictionary
 			<string, HashSet<string>>();
 
-		protected internal ConsoleDecompiler(File destination, IDictionary<string, object
+		protected internal ConsoleDecompiler(FileSystemInfo destination, Dictionary<string, object
 			> options, IFernflowerLogger logger)
 		{
 			// *******************************************************************
@@ -117,12 +120,12 @@ namespace JetBrainsDecompiler.Main.Decompiler
 			engine = new Fernflower(this, this, options, logger);
 		}
 
-		public virtual void AddSource(File source)
+		public virtual void AddSource(FileSystemInfo source)
 		{
 			engine.AddSource(source);
 		}
 
-		public virtual void AddLibrary(File library)
+		public virtual void AddLibrary(FileSystemInfo library)
 		{
 			engine.AddLibrary(library);
 		}
@@ -142,17 +145,17 @@ namespace JetBrainsDecompiler.Main.Decompiler
 		// *******************************************************************
 		// Interface IBytecodeProvider
 		// *******************************************************************
-		/// <exception cref="System.IO.IOException"/>
+		/// <exception cref="IOException"/>
 		public virtual byte[] GetBytecode(string externalPath, string internalPath)
 		{
-			File file = new File(externalPath);
+			var file = new FileInfo(externalPath);
 			if (internalPath == null)
 			{
 				return InterpreterUtil.GetBytes(file);
 			}
 			else
 			{
-				using (ZipFile archive = new ZipFile(file))
+				using (var archive = new ZipFile(file.FullName))
 				{
 					ZipEntry entry = archive.GetEntry(internalPath);
 					if (entry == null)
@@ -169,15 +172,22 @@ namespace JetBrainsDecompiler.Main.Decompiler
 		// *******************************************************************
 		private string GetAbsolutePath(string path)
 		{
-			return new File(root, path).GetAbsolutePath();
+			return Path.GetFullPath(path);
 		}
 
 		public virtual void SaveFolder(string path)
 		{
-			File dir = new File(GetAbsolutePath(path));
-			if (!(dir.Mkdirs() || dir.IsDirectory()))
+			DirectoryInfo dir = new DirectoryInfo(GetAbsolutePath(path));
+			if (!(dir.Exists))
 			{
-				throw new Exception("Cannot create directory " + dir);
+				try
+				{
+					dir.Create();
+				}
+				catch (Exception e)
+				{
+					throw new Exception("Cannot create directory " + dir);
+				}
 			}
 		}
 
@@ -185,8 +195,7 @@ namespace JetBrainsDecompiler.Main.Decompiler
 		{
 			try
 			{
-				InterpreterUtil.CopyFile(new File(source), new File(GetAbsolutePath(path), entryName
-					));
+				InterpreterUtil.CopyFile(new FileInfo(source), new FileInfo(Path.Combine(GetAbsolutePath(path), entryName)));
 			}
 			catch (IOException ex)
 			{
@@ -198,14 +207,10 @@ namespace JetBrainsDecompiler.Main.Decompiler
 		public virtual void SaveClassFile(string path, string qualifiedName, string entryName
 			, string content, int[] mapping)
 		{
-			File file = new File(GetAbsolutePath(path), entryName);
+			FileSystemInfo file = new FileInfo(Path.Combine(GetAbsolutePath(path), entryName));
 			try
 			{
-				using (TextWriter @out = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets
-					.Utf_8))
-				{
-					@out.Write(content);
-				}
+				File.WriteAllText(file.FullName, content);
 			}
 			catch (IOException ex)
 			{
@@ -216,17 +221,12 @@ namespace JetBrainsDecompiler.Main.Decompiler
 		public virtual void CreateArchive(string path, string archiveName, Manifest manifest
 			)
 		{
-			File file = new File(GetAbsolutePath(path), archiveName);
+			FileSystemInfo file = new FileInfo(Path.Combine(GetAbsolutePath(path), archiveName));
 			try
 			{
-				if (!(file.CreateNewFile() || file.IsFile()))
-				{
-					throw new IOException("Cannot create file " + file);
-				}
-				FileOutputStream fileStream = new FileOutputStream(file);
-				ZipOutputStream zipStream = manifest != null ? new JarOutputStream(fileStream, manifest
-					) : new ZipOutputStream(fileStream);
-				Sharpen.Collections.Put(mapArchiveStreams, file.GetPath(), zipStream);
+
+				ZipOutputStream zipStream = new ZipOutputStream(File.OpenWrite(file.FullName));
+				Sharpen.Collections.Put(mapArchiveStreams, file.FullName, zipStream);
 			}
 			catch (IOException ex)
 			{
@@ -243,19 +243,19 @@ namespace JetBrainsDecompiler.Main.Decompiler
 		public virtual void CopyEntry(string source, string path, string archiveName, string
 			 entryName)
 		{
-			string file = new File(GetAbsolutePath(path), archiveName).GetPath();
+			string file = new FileInfo(Path.Combine(GetAbsolutePath(path), archiveName)).FullName;
 			if (!CheckEntry(entryName, file))
 			{
 				return;
 			}
 			try
 			{
-				using (ZipFile srcArchive = new ZipFile(new File(source)))
+				using (ZipFile srcArchive = new ZipFile(source))
 				{
 					ZipEntry entry = srcArchive.GetEntry(entryName);
 					if (entry != null)
 					{
-						using (InputStream @in = srcArchive.GetInputStream(entry))
+						using (var @in = new MemoryStream(srcArchive.GetInputStream(entry).ReadFully()).ToInputStream())
 						{
 							ZipOutputStream @out = mapArchiveStreams.GetOrNull(file);
 							@out.PutNextEntry(new ZipEntry(entryName));
@@ -275,7 +275,7 @@ namespace JetBrainsDecompiler.Main.Decompiler
 		public virtual void SaveClassEntry(string path, string archiveName, string qualifiedName
 			, string entryName, string content)
 		{
-			string file = new File(GetAbsolutePath(path), archiveName).GetPath();
+			string file = new FileInfo(Path.Combine(GetAbsolutePath(path), archiveName)).FullName;
 			if (!CheckEntry(entryName, file))
 			{
 				return;
@@ -286,7 +286,7 @@ namespace JetBrainsDecompiler.Main.Decompiler
 				@out.PutNextEntry(new ZipEntry(entryName));
 				if (content != null)
 				{
-					@out.Write(Sharpen.Runtime.GetBytesForString(content, StandardCharsets.Utf_8));
+					@out.Write(Sharpen.Runtime.GetBytesForString(content, "UTF-8"));
 				}
 			}
 			catch (IOException ex)
@@ -312,7 +312,7 @@ namespace JetBrainsDecompiler.Main.Decompiler
 
 		public virtual void CloseArchive(string path, string archiveName)
 		{
-			string file = new File(GetAbsolutePath(path), archiveName).GetPath();
+			string file = new FileInfo(Path.Combine(GetAbsolutePath(path), archiveName)).FullName;
 			try
 			{
 				Sharpen.Collections.Remove(mapArchiveEntries, file);

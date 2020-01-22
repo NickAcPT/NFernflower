@@ -19,10 +19,10 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 {
 	public class FinallyProcessor
 	{
-		private readonly IDictionary<int, int> finallyBlockIDs = new Dictionary<int, int>
+		private readonly Dictionary<int, int> finallyBlockIDs = new Dictionary<int, int>
 			();
 
-		private readonly IDictionary<int, int> catchallBlockIDs = new Dictionary<int, int
+		private readonly Dictionary<int, int> catchallBlockIDs = new Dictionary<int, int
 			>();
 
 		private readonly MethodDescriptor methodDescriptor;
@@ -46,7 +46,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 		{
 			int bytecode_version = mt.GetClassStruct().GetBytecodeVersion();
 			LinkedList<Statement> stack = new LinkedList<Statement>();
-			stack.Add(root);
+			stack.AddLast(root);
 			while (!(stack.Count == 0))
 			{
 				Statement stat = Sharpen.Collections.RemoveLast(stack);
@@ -78,7 +78,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 						}
 						else
 						{
-							if (DecompilerContext.GetOption(IIFernflowerPreferences.Finally_Deinline) && VerifyFinallyEx
+							if (DecompilerContext.GetOption(IFernflowerPreferences.Finally_Deinline) && VerifyFinallyEx
 								(graph, fin, inf))
 							{
 								Sharpen.Collections.Put(finallyBlockIDs, handler.id, null);
@@ -106,11 +106,11 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 
 		private class Record
 		{
-			private readonly int firstCode;
+			internal readonly int firstCode;
 
-			private readonly IDictionary<BasicBlock, bool> mapLast;
+			internal readonly Dictionary<BasicBlock, bool> mapLast;
 
-			private Record(int firstCode, IDictionary<BasicBlock, bool> mapLast)
+			internal Record(int firstCode, Dictionary<BasicBlock, bool> mapLast)
 			{
 				this.firstCode = firstCode;
 				this.mapLast = mapLast;
@@ -120,7 +120,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 		private FinallyProcessor.Record GetFinallyInformation(StructMethod mt, RootStatement
 			 root, CatchAllStatement fstat)
 		{
-			IDictionary<BasicBlock, bool> mapLast = new Dictionary<BasicBlock, bool>();
+			Dictionary<BasicBlock, bool> mapLast = new Dictionary<BasicBlock, bool>();
 			BasicBlockStatement firstBlockStatement = fstat.GetHandler().GetBasichead();
 			BasicBlock firstBasicBlock = firstBlockStatement.GetBlock();
 			Instruction instrFirst = firstBasicBlock.GetInstruction(0);
@@ -149,7 +149,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			FlattenStatementsHelper flatthelper = new FlattenStatementsHelper();
 			DirectGraph dgraph = flatthelper.BuildDirectGraph(root);
 			LinkedList<DirectNode> stack = new LinkedList<DirectNode>();
-			stack.Add(dgraph.first);
+			stack.AddLast(dgraph.first);
 			HashSet<DirectNode> setVisited = new HashSet<DirectNode>();
 			while (!(stack.Count == 0))
 			{
@@ -321,7 +321,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 		{
 			HashSet<BasicBlock> setCopy = new HashSet<BasicBlock>(setTry);
 			int finallytype = information.firstCode;
-			IDictionary<BasicBlock, bool> mapLast = information.mapLast;
+			Dictionary<BasicBlock, bool> mapLast = information.mapLast;
 			// first and last statements
 			RemoveExceptionInstructionsEx(handler, 1, finallytype);
 			foreach (KeyValuePair<BasicBlock, bool> entry in mapLast)
@@ -437,7 +437,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 
 		private static HashSet<BasicBlock> GetAllBasicBlocks(Statement stat)
 		{
-			List<Statement> lst = new LinkedList<Statement>();
+			List<Statement> lst = new List<Statement>(new LinkedList<Statement>());
 			lst.Add(stat);
 			int index = 0;
 			do
@@ -468,7 +468,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			HashSet<BasicBlock> tryBlocks = GetAllBasicBlocks(fstat.GetFirst());
 			HashSet<BasicBlock> catchBlocks = GetAllBasicBlocks(fstat.GetHandler());
 			int finallytype = information.firstCode;
-			IDictionary<BasicBlock, bool> mapLast = information.mapLast;
+			Dictionary<BasicBlock, bool> mapLast = information.mapLast;
 			BasicBlock first = fstat.GetHandler().GetBasichead().GetBlock();
 			bool skippedFirst = false;
 			if (finallytype == 3)
@@ -539,13 +539,13 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 
 		private class Area
 		{
-			private readonly BasicBlock start;
+			internal readonly BasicBlock start;
 
-			private readonly HashSet<BasicBlock> sample;
+			internal readonly HashSet<BasicBlock> sample;
 
-			private readonly BasicBlock next;
+			internal readonly BasicBlock next;
 
-			private Area(BasicBlock start, HashSet<BasicBlock> sample, BasicBlock next)
+			internal Area(BasicBlock start, HashSet<BasicBlock> sample, BasicBlock next)
 			{
 				this.start = start;
 				this.sample = sample;
@@ -555,12 +555,12 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 
 		private FinallyProcessor.Area CompareSubgraphsEx(ControlFlowGraph graph, BasicBlock
 			 startSample, HashSet<BasicBlock> catchBlocks, BasicBlock startCatch, int finallytype
-			, IDictionary<BasicBlock, bool> mapLast, bool skippedFirst)
+			, Dictionary<BasicBlock, bool> mapLast, bool skippedFirst)
 		{
 			// TODO: correct handling (merging) of multiple paths
-			List<_T1926163957> stack = new LinkedList<_T1926163957>();
+			List<_T1926163957> stack = new List<_T1926163957>(new LinkedList<_T1926163957>());
 			HashSet<BasicBlock> setSample = new HashSet<BasicBlock>();
-			IDictionary<string, BasicBlock[]> mapNext = new Dictionary<string, BasicBlock[]>(
+			Dictionary<string, BasicBlock[]> mapNext = new Dictionary<string, BasicBlock[]>(
 				);
 			stack.Add(new _T1926163957(this, startCatch, startSample, new List<int[]>()));
 			while (!(stack.Count == 0))
@@ -570,7 +570,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 				BasicBlock blockSample = entry.blockSample;
 				bool isFirstBlock = !skippedFirst && blockCatch == startCatch;
 				bool isLastBlock = mapLast.ContainsKey(blockCatch);
-				bool isTrueLastBlock = isLastBlock && mapLast.GetOrNullable(blockCatch);
+				bool isTrueLastBlock = isLastBlock && (mapLast.GetOrNullable(blockCatch) ?? false);
 				if (!CompareBasicBlocksEx(graph, blockCatch, blockSample, (isFirstBlock ? 1 : 0) 
 					| (isTrueLastBlock ? 2 : 0), finallytype, entry.lstStoreVars))
 				{

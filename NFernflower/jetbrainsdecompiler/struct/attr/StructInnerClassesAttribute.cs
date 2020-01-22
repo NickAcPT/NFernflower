@@ -22,7 +22,7 @@ namespace JetBrainsDecompiler.Struct.Attr
 
 			public readonly string simpleName;
 
-			private Entry(int outerNameIdx, int simpleNameIdx, int accessFlags, string innerName
+			internal Entry(int outerNameIdx, int simpleNameIdx, int accessFlags, string innerName
 				, string enclosingName, string simpleName)
 			{
 				this.outerNameIdx = outerNameIdx;

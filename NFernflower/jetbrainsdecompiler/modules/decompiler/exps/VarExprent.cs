@@ -123,10 +123,10 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 			StructLocalVariableTableAttribute attr = method.GetLocalVariableAttr();
 			if (attr != null && processor != null)
 			{
-				int origIndex = processor.GetVarOriginalIndex(index);
+				int? origIndex = processor.GetVarOriginalIndex(index);
 				if (origIndex != null)
 				{
-					string name = attr.GetName(origIndex, visibleOffset);
+					string name = attr.GetName(origIndex.Value, visibleOffset);
 					if (name != null && TextUtil.IsValidIdentifier(name, method.GetClassStruct().GetBytecodeVersion
 						()))
 					{
@@ -139,13 +139,13 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 
 		private void AppendDefinitionType(TextBuffer buffer)
 		{
-			if (DecompilerContext.GetOption(IIFernflowerPreferences.Use_Debug_Var_Names))
+			if (DecompilerContext.GetOption(IFernflowerPreferences.Use_Debug_Var_Names))
 			{
 				MethodWrapper method = (MethodWrapper)DecompilerContext.GetProperty(DecompilerContext
 					.Current_Method_Wrapper);
 				if (method != null)
 				{
-					int originalIndex = null;
+					int? originalIndex = null;
 					if (processor != null)
 					{
 						originalIndex = processor.GetVarOriginalIndex(index);
@@ -153,7 +153,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 					if (originalIndex != null)
 					{
 						// first try from signature
-						if (DecompilerContext.GetOption(IIFernflowerPreferences.Decompile_Generic_Signatures
+						if (DecompilerContext.GetOption(IFernflowerPreferences.Decompile_Generic_Signatures
 							))
 						{
 							StructLocalVariableTypeTableAttribute attr = method.methodStruct.GetAttribute(StructGeneralAttribute

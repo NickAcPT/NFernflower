@@ -38,6 +38,7 @@ namespace JetBrainsDecompiler.Struct
 		private List<StructClass> classes = new List<StructClass>();
 
 		private Manifest manifest;
+		internal const string Manifest_Name = "META-INF/MANIFEST.MF";
 
 		public ContextUnit(int type, string archivePath, string filename, bool own, IIResultSaver
 			 resultSaver, IIDecompiledData decompiledData)
@@ -113,7 +114,7 @@ namespace JetBrainsDecompiler.Struct
 							if (content != null)
 							{
 								int[] mapping = null;
-								if (DecompilerContext.GetOption(IIFernflowerPreferences.Bytecode_Source_Mapping))
+								if (DecompilerContext.GetOption(IFernflowerPreferences.Bytecode_Source_Mapping))
 								{
 									mapping = DecompilerContext.GetBytecodeSourceMapper().GetOriginalLinesMapping();
 								}
@@ -139,7 +140,7 @@ namespace JetBrainsDecompiler.Struct
 					// non-class entries
 					foreach (string[] pair in otherEntries)
 					{
-						if (type != Type_Jar || !Sharpen.Runtime.EqualsIgnoreCase(JarFile.Manifest_Name, 
+						if (type != Type_Jar || !Sharpen.Runtime.EqualsIgnoreCase(Manifest_Name, 
 							pair[1]))
 						{
 							resultSaver.CopyEntry(pair[0], archivePath, filename, pair[1]);

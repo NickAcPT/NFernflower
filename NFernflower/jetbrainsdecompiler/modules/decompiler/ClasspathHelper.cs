@@ -1,9 +1,9 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
-using Java.Lang;
 using JetBrainsDecompiler.Struct.Gen;
 using Sharpen;
 
@@ -11,8 +11,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 {
 	public class ClasspathHelper
 	{
-		private static readonly IDictionary<string, MethodInfo> Method_Cache = Java.Util.Collections
-			.SynchronizedMap(new Dictionary<string, MethodInfo>());
+		private static readonly ConcurrentDictionary<string, MethodInfo> Method_Cache = (new ConcurrentDictionary<string, MethodInfo>());
 
 		public static MethodInfo FindMethod(string classname, string methodName, MethodDescriptor
 			 descriptor)
@@ -36,6 +35,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 		private static MethodInfo FindMethodOnClasspath(string targetClass, string methodSignature
 			)
 		{
+			/*
 			try
 			{
 				// use bootstrap classloader to only provide access to JRE classes
@@ -52,16 +52,9 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			catch (Exception)
 			{
 			}
+			*/
 			// ignore
 			return null;
-		}
-
-		private sealed class _ClassLoader_35 : ClassLoader
-		{
-			public _ClassLoader_35(ClassLoader baseArg1)
-				: base(baseArg1)
-			{
-			}
 		}
 
 		private static string BuildMethodSignature(string name, MethodDescriptor md)

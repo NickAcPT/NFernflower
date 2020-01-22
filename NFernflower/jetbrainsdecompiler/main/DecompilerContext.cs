@@ -1,6 +1,6 @@
 // Copyright 2000-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System.Collections.Generic;
-using Java.Lang;
+using System.Threading;
 using Java.Util;
 using JetBrainsDecompiler.Main.Collectors;
 using JetBrainsDecompiler.Main.Extern;
@@ -21,7 +21,7 @@ namespace JetBrainsDecompiler.Main
 
 		public const string Current_Method_Wrapper = "CURRENT_METHOD_WRAPPER";
 
-		private readonly IDictionary<string, object> properties;
+		private readonly Dictionary<string, object> properties;
 
 		private readonly IFernflowerLogger logger;
 
@@ -39,14 +39,10 @@ namespace JetBrainsDecompiler.Main
 
 		private BytecodeSourceMapper bytecodeSourceMapper;
 
-		public DecompilerContext(IDictionary<string, object> properties, IFernflowerLogger
+		public DecompilerContext(Dictionary<string, object> properties, IFernflowerLogger
 			 logger, StructContext structContext, ClassesProcessor classProcessor, PoolInterceptor
 			 interceptor)
 		{
-			Objects.RequireNonNull(properties);
-			Objects.RequireNonNull(logger);
-			Objects.RequireNonNull(structContext);
-			Objects.RequireNonNull(classProcessor);
 			this.properties = properties;
 			this.logger = logger;
 			this.structContext = structContext;
@@ -63,12 +59,12 @@ namespace JetBrainsDecompiler.Main
 		// *****************************************************************************
 		public static DecompilerContext GetCurrentContext()
 		{
-			return currentContext.Get();
+			return currentContext.Value;
 		}
 
 		public static void SetCurrentContext(DecompilerContext context)
 		{
-			currentContext.Set(context);
+			currentContext.Value = context;
 		}
 
 		public static void SetProperty(string key, object value)
@@ -106,8 +102,8 @@ namespace JetBrainsDecompiler.Main
 
 		public static string GetNewLineSeparator()
 		{
-			return GetOption(IIFernflowerPreferences.New_Line_Separator) ? IIFernflowerPreferences
-				.Line_Separator_Unx : IIFernflowerPreferences.Line_Separator_Win;
+			return GetOption(IFernflowerPreferences.New_Line_Separator) ? IFernflowerPreferences
+				.Line_Separator_Unx : IFernflowerPreferences.Line_Separator_Win;
 		}
 
 		public static IFernflowerLogger GetLogger()

@@ -7,7 +7,7 @@ using Sharpen;
 
 namespace JetBrainsDecompiler.Modules.Renamer
 {
-	public class ConverterHelper : IIIdentifierRenamer
+	public class ConverterHelper : IIdentifierRenamer
 	{
 		private static readonly HashSet<string> Keywords = new HashSet<string>(Sharpen.Arrays.AsList
 			("abstract", "do", "if", "package", "synchronized", "boolean", "double", "implements"
@@ -38,7 +38,7 @@ namespace JetBrainsDecompiler.Modules.Renamer
 				element;
 			return value == null || value.Length <= 2 || !IsValidIdentifier(elementType == IIdentifierRenamer.Type
 				.Element_Method, value) || Keywords.Contains(value) || elementType == IIdentifierRenamer.Type
-				.Element_Class && (Reserved_Windows_Namespace.Contains(value.ToLower(Locale.English
+				.Element_Class && (Reserved_Windows_Namespace.Contains(value.ToLower(
 				)) || value.Length > 255 - ".class".Length);
 		}
 
@@ -70,7 +70,7 @@ namespace JetBrainsDecompiler.Modules.Renamer
 			{
 				return true;
 			}
-			if (!char.IsJavaIdentifierStart(identifier[0]))
+			if (!Runtime.IsJavaIdentifierPart(identifier[0]))
 			{
 				return false;
 			}
@@ -78,7 +78,7 @@ namespace JetBrainsDecompiler.Modules.Renamer
 			for (int i = 1; i < chars.Length; i++)
 			{
 				char ch = chars[i];
-				if ((!char.IsJavaIdentifierPart(ch)) || char.IsIdentifierIgnorable(ch))
+				if ((!Runtime.IsJavaIdentifierPart(ch))/* || char.IsIdentifierIgnorable(ch)*/)
 				{
 					return false;
 				}

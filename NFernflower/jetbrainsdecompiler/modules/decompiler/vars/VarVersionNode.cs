@@ -6,7 +6,7 @@ using Sharpen;
 
 namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 {
-	public class VarVersionNode : IIGraphNode
+	public class VarVersionNode : IGraphNode
 	{
 		public const int Flag_Phantom_Finexit = 2;
 
@@ -28,9 +28,9 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 			this.version = version;
 		}
 
-		public virtual List<IIGraphNode> GetPredecessors()
+		public virtual List<IGraphNode> GetPredecessors()
 		{
-			List<IIGraphNode> lst = new List<IIGraphNode>(preds.Count);
+			List<IGraphNode> lst = new List<IGraphNode>(preds.Count);
 			foreach (VarVersionEdge edge in preds)
 			{
 				lst.Add(edge.source);

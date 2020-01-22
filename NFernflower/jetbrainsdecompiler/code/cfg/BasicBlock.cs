@@ -7,7 +7,7 @@ using Sharpen;
 
 namespace JetBrainsDecompiler.Code.Cfg
 {
-	public class BasicBlock : IIGraphNode
+	public class BasicBlock : IGraphNode
 	{
 		public int id;
 
@@ -194,9 +194,9 @@ namespace JetBrainsDecompiler.Code.Cfg
 			return instrOldOffsets;
 		}
 
-		public virtual List<IIGraphNode> GetPredecessors()
+		public virtual List<IGraphNode> GetPredecessors()
 		{
-			List<BasicBlock> lst = new List<BasicBlock>(preds);
+			List<IGraphNode> lst = new List<IGraphNode>(preds);
 			Sharpen.Collections.AddAll(lst, predExceptions);
 			return lst;
 		}

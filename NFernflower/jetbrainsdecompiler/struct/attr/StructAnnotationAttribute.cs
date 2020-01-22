@@ -1,12 +1,13 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System;
 using System.Collections.Generic;
-using Java.IO;
+using System.IO;
 using JetBrainsDecompiler.Code;
 using JetBrainsDecompiler.Modules.Decompiler.Exps;
 using JetBrainsDecompiler.Struct.Consts;
 using JetBrainsDecompiler.Struct.Gen;
 using JetBrainsDecompiler.Util;
+using ObjectWeb.Misc.Java.IO;
 using Sharpen;
 
 namespace JetBrainsDecompiler.Struct.Attr
@@ -15,13 +16,13 @@ namespace JetBrainsDecompiler.Struct.Attr
 	{
 		private List<AnnotationExprent> annotations;
 
-		/// <exception cref="System.IO.IOException"/>
+		/// <exception cref="IOException"/>
 		public override void InitContent(DataInputFullStream data, ConstantPool pool)
 		{
 			annotations = ParseAnnotations(pool, data);
 		}
 
-		/// <exception cref="System.IO.IOException"/>
+		/// <exception cref="IOException"/>
 		public static List<AnnotationExprent> ParseAnnotations(ConstantPool pool, DataInputStream
 			 data)
 		{
@@ -41,7 +42,7 @@ namespace JetBrainsDecompiler.Struct.Attr
 			}
 		}
 
-		/// <exception cref="System.IO.IOException"/>
+		/// <exception cref="IOException"/>
 		public static AnnotationExprent ParseAnnotation(DataInputStream data, ConstantPool
 			 pool)
 		{
@@ -68,7 +69,7 @@ namespace JetBrainsDecompiler.Struct.Attr
 			return new AnnotationExprent(new VarType(className).value, names, values);
 		}
 
-		/// <exception cref="System.IO.IOException"/>
+		/// <exception cref="IOException"/>
 		public static Exprent ParseAnnotationElement(DataInputStream data, ConstantPool pool
 			)
 		{

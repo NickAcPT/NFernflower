@@ -6,10 +6,10 @@ namespace JetBrainsDecompiler.Modules.Renamer
 {
 	public class PoolInterceptor
 	{
-		private readonly IDictionary<string, string> mapOldToNewNames = new Dictionary<string
+		private readonly Dictionary<string, string> mapOldToNewNames = new Dictionary<string
 			, string>();
 
-		private readonly IDictionary<string, string> mapNewToOldNames = new Dictionary<string
+		private readonly Dictionary<string, string> mapNewToOldNames = new Dictionary<string
 			, string>();
 
 		public virtual void AddName(string oldName, string newName)

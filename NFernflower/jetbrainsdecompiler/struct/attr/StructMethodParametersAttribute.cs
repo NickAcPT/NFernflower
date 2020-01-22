@@ -40,7 +40,7 @@ namespace JetBrainsDecompiler.Struct.Attr
 				entries = new System.Collections.Generic.List<StructMethodParametersAttribute.Entry
 					>();
 			}
-			myEntries = Java.Util.Collections.UnmodifiableList(entries);
+			myEntries = (entries);
 		}
 
 		public virtual List<StructMethodParametersAttribute.Entry> GetEntries()

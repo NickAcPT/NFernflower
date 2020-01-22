@@ -48,7 +48,7 @@ namespace JetBrainsDecompiler.Main
 		private static StructField FindAssertionField(ClassesProcessor.ClassNode node)
 		{
 			ClassWrapper wrapper = node.GetWrapper();
-			bool noSynthFlag = DecompilerContext.GetOption(IIFernflowerPreferences.Synthetic_Not_Set
+			bool noSynthFlag = DecompilerContext.GetOption(IFernflowerPreferences.Synthetic_Not_Set
 				);
 			foreach (StructField fd in wrapper.GetClassStruct().GetFields())
 			{

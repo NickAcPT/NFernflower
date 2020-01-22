@@ -1,6 +1,7 @@
 // Copyright 2000-2018 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Java.Util;
 using JetBrainsDecompiler.Code;
@@ -15,6 +16,7 @@ using JetBrainsDecompiler.Struct.Consts;
 using JetBrainsDecompiler.Struct.Gen;
 using JetBrainsDecompiler.Struct.Match;
 using JetBrainsDecompiler.Util;
+using NFernflower.Java.Util;
 using Sharpen;
 
 namespace JetBrainsDecompiler.Modules.Decompiler.Exps
@@ -378,7 +380,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 					mask = ExprUtil.GetSyntheticParametersMask(newNode, stringDescriptor, lstParameters
 						.Count);
 					isEnum = newNode.classStruct.HasModifier(ICodeConstants.Acc_Enum) && DecompilerContext
-						.GetOption(IIFernflowerPreferences.Decompile_Enum);
+						.GetOption(IFernflowerPreferences.Decompile_Enum);
 				}
 			}
 			BitSet setAmbiguousParameters = GetAmbiguousParameters();
@@ -435,7 +437,8 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 				// TODO: tap into IDEA indices to access libraries methods details
 				// try to check the class on the classpath
 				MethodInfo mtd = ClasspathHelper.FindMethod(classname, name, descriptor);
-				return mtd != null && mtd.IsVarArgs();
+				return mtd != null && mtd.GetParameters()
+					       .Any(param => Attribute.IsDefined(param, typeof(ParamArrayAttribute)));
 			}
 			return false;
 		}
@@ -526,7 +529,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 			return null;
 		}
 
-		private static readonly IDictionary<string, string> Unboxing_Methods;
+		private static readonly Dictionary<string, string> Unboxing_Methods;
 
 		static InvocationExprent()
 		{
@@ -575,6 +578,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Exps
 				}
 			}
 nextMethod_break: ;
+nextMethod_continue:
 			if (matches.Count == 1)
 			{
 				return Empty_Bit_Set;

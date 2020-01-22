@@ -95,14 +95,13 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			bool res = false;
 			HashSet<DirectNode> setVisited = new HashSet<DirectNode>();
 			LinkedList<DirectNode> stack = new LinkedList<DirectNode>();
-			LinkedList<IDictionary<VarVersionPair, Exprent>> stackMaps = new LinkedList<IDictionary
-				<VarVersionPair, Exprent>>();
-			stack.Add(dgraph.first);
-			stackMaps.Add(new Dictionary<VarVersionPair, Exprent>());
+			LinkedList<Dictionary<VarVersionPair, Exprent>> stackMaps = new LinkedList<Dictionary<VarVersionPair, Exprent>>();
+			stack.AddLast(dgraph.first);
+			stackMaps.AddLast(new Dictionary<VarVersionPair, Exprent>());
 			while (!(stack.Count == 0))
 			{
 				DirectNode nd = Sharpen.Collections.RemoveFirst(stack);
-				IDictionary<VarVersionPair, Exprent> mapVarValues = Sharpen.Collections.RemoveFirst
+				Dictionary<VarVersionPair, Exprent> mapVarValues = Sharpen.Collections.RemoveFirst
 					(stackMaps);
 				if (setVisited.Contains(nd))
 				{
@@ -155,8 +154,8 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 				}
 				foreach (DirectNode ndx in nd.succs)
 				{
-					stack.Add(ndx);
-					stackMaps.Add(new Dictionary<VarVersionPair, Exprent>(mapVarValues));
+					stack.AddLast(ndx);
+					stackMaps.AddLast(new Dictionary<VarVersionPair, Exprent>(mapVarValues));
 				}
 				// make sure the 3 special exprent lists in a loop (init, condition, increment) are not empty
 				// change loop type if necessary
@@ -179,7 +178,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			return res;
 		}
 
-		private static Exprent IsReplaceableVar(Exprent exprent, IDictionary<VarVersionPair
+		private static Exprent IsReplaceableVar(Exprent exprent, Dictionary<VarVersionPair
 			, Exprent> mapVarValues)
 		{
 			Exprent dest = null;
@@ -201,22 +200,22 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			foreach (VarVersionPair varpaar in setVars)
 			{
 				VarVersionNode node = ssau.GetSsuversions().nodes.GetWithKey(varpaar);
-				for (IEnumerator<KeyValuePair<int, FastSparseSetFactory.FastSparseSet<int>>> itent
+				for (IEnumerator<KeyValuePair<int, FastSparseSetFactory<int>.FastSparseSet<int>>> itent
 					 = node.live.EntryList().GetEnumerator(); itent.MoveNext(); )
 				{
-					KeyValuePair<int, FastSparseSetFactory.FastSparseSet<int>> ent = itent.Current;
+					KeyValuePair<int, FastSparseSetFactory<int>.FastSparseSet<int>> ent = itent.Current;
 					int key = ent.Key;
 					if (!livemap.ContainsKey(key))
 					{
-						itent.Remove();
+						node.live.EntryList().Remove(itent.Current);
 					}
 					else
 					{
-						FastSparseSetFactory.FastSparseSet<int> set = ent.Value;
+						FastSparseSetFactory<int>.FastSparseSet<int> set = ent.Value;
 						set.Complement(livemap.Get(key));
 						if (set.IsEmpty())
 						{
-							itent.Remove();
+							node.live.EntryList().Remove(itent.Current);
 						}
 					}
 				}
@@ -224,7 +223,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 		}
 
 		private int[] IterateExprent(List<Exprent> lstExprents, int index, Exprent next, 
-			IDictionary<VarVersionPair, Exprent> mapVarValues, SSAUConstructorSparseEx ssau)
+			Dictionary<VarVersionPair, Exprent> mapVarValues, SSAUConstructorSparseEx ssau)
 		{
 			Exprent exprent = lstExprents[index];
 			int changed = 0;
@@ -232,7 +231,8 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			{
 				while (true)
 				{
-					object[] arr = IterateChildExprent(expr, exprent, next, mapVarValues, ssau);
+					var oldExpr = expr;
+					object[] arr = IterateChildExprent(oldExpr, exprent, next, mapVarValues, ssau);
 					Exprent retexpr = (Exprent)arr[0];
 					changed |= (bool)arr[1] ? 1 : 0;
 					bool isReplaceable = (bool)arr[2];
@@ -240,12 +240,12 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 					{
 						if (isReplaceable)
 						{
-							ReplaceSingleVar(exprent, (VarExprent)expr, retexpr, ssau);
-							expr = retexpr;
+							ReplaceSingleVar(exprent, (VarExprent)oldExpr, retexpr, ssau);
+							oldExpr = retexpr;
 						}
 						else
 						{
-							exprent.ReplaceExprent(expr, retexpr);
+							exprent.ReplaceExprent(oldExpr, retexpr);
 						}
 						changed = 1;
 					}
@@ -314,7 +314,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			{
 				return new int[] { -1, changed };
 			}
-			IDictionary<int, HashSet<VarVersionPair>> mapVars = GetAllVarVersions(leftpaar, right
+			Dictionary<int, HashSet<VarVersionPair>> mapVars = GetAllVarVersions(leftpaar, right
 				, ssau);
 			bool isSelfReference = mapVars.ContainsKey(leftpaar.var);
 			if (isSelfReference && notdom)
@@ -404,7 +404,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 		}
 
 		private static object[] IterateChildExprent(Exprent exprent, Exprent parent, Exprent
-			 next, IDictionary<VarVersionPair, Exprent> mapVarValues, SSAUConstructorSparseEx
+			 next, Dictionary<VarVersionPair, Exprent> mapVarValues, SSAUConstructorSparseEx
 			 ssau)
 		{
 			bool changed = false;
@@ -412,7 +412,8 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			{
 				while (true)
 				{
-					object[] arr = IterateChildExprent(expr, parent, next, mapVarValues, ssau);
+					var oldExpr = expr;
+					object[] arr = IterateChildExprent(oldExpr, parent, next, mapVarValues, ssau);
 					Exprent retexpr = (Exprent)arr[0];
 					changed |= (bool)arr[1];
 					bool isReplaceable = (bool)arr[2];
@@ -420,12 +421,12 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 					{
 						if (isReplaceable)
 						{
-							ReplaceSingleVar(exprent, (VarExprent)expr, retexpr, ssau);
-							expr = retexpr;
+							ReplaceSingleVar(exprent, (VarExprent)oldExpr, retexpr, ssau);
+							oldExpr = retexpr;
 						}
 						else
 						{
-							exprent.ReplaceExprent(expr, retexpr);
+							exprent.ReplaceExprent(oldExpr, retexpr);
 						}
 						changed = true;
 					}
@@ -487,7 +488,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			{
 				return new object[] { null, changed, false };
 			}
-			IDictionary<int, HashSet<VarVersionPair>> mapVars = GetAllVarVersions(leftpaar, right
+			Dictionary<int, HashSet<VarVersionPair>> mapVars = GetAllVarVersions(leftpaar, right
 				, ssau);
 			if (mapVars.ContainsKey(leftpaar.var) && notdom)
 			{
@@ -533,15 +534,15 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			return new object[] { null, changed, false };
 		}
 
-		private static bool GetUsedVersions<_T0>(SSAUConstructorSparseEx ssa, VarVersionPair
-			 var, List<_T0> res)
+		private static bool GetUsedVersions(SSAUConstructorSparseEx ssa, VarVersionPair
+			 var, List<VarVersionNode> res)
 		{
 			VarVersionsGraph ssuversions = ssa.GetSsuversions();
 			VarVersionNode varnode = ssuversions.nodes.GetWithKey(var);
 			HashSet<VarVersionNode> setVisited = new HashSet<VarVersionNode>();
 			HashSet<VarVersionNode> setNotDoms = new HashSet<VarVersionNode>();
 			LinkedList<VarVersionNode> stack = new LinkedList<VarVersionNode>();
-			stack.Add(varnode);
+			stack.AddLast(varnode);
 			while (!(stack.Count == 0))
 			{
 				VarVersionNode nd = stack.RemoveAtReturningValue(0);
@@ -566,7 +567,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 						}
 						if (isDominated)
 						{
-							stack.Add(succ);
+							stack.AddLast(succ);
 						}
 						else
 						{
@@ -579,7 +580,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			return !(setNotDoms.Count == 0);
 		}
 
-		private static bool IsVersionToBeReplaced(VarVersionPair usedvar, IDictionary<int
+		private static bool IsVersionToBeReplaced(VarVersionPair usedvar, Dictionary<int
 			, HashSet<VarVersionPair>> mapVars, SSAUConstructorSparseEx ssau, VarVersionPair
 			 leftpaar)
 		{
@@ -598,7 +599,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			}
 			foreach (KeyValuePair<int, HashSet<VarVersionPair>> ent in mapVars)
 			{
-				FastSparseSetFactory.FastSparseSet<int> liveverset = mapLiveVars.Get(ent.Key);
+				FastSparseSetFactory<int>.FastSparseSet<int> liveverset = mapLiveVars.Get(ent.Key);
 				if (liveverset == null)
 				{
 					return false;
@@ -627,10 +628,10 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			return true;
 		}
 
-		private static IDictionary<int, HashSet<VarVersionPair>> GetAllVarVersions(VarVersionPair
+		private static Dictionary<int, HashSet<VarVersionPair>> GetAllVarVersions(VarVersionPair
 			 leftvar, Exprent exprent, SSAUConstructorSparseEx ssau)
 		{
-			IDictionary<int, HashSet<VarVersionPair>> map = new Dictionary<int, HashSet<VarVersionPair
+			Dictionary<int, HashSet<VarVersionPair>> map = new Dictionary<int, HashSet<VarVersionPair
 				>>();
 			SFormsFastMapDirect mapLiveVars = ssau.GetLiveVarVersionsMap(leftvar);
 			List<Exprent> lst = exprent.GetAllExprents(true);

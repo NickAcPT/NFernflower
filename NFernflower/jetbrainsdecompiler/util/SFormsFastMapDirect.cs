@@ -10,7 +10,7 @@ namespace JetBrainsDecompiler.Util
 	{
 		private int size__;
 
-		private readonly FastSparseSetFactory.FastSparseSet<int>[][] elements = new FastSparseSetFactory.FastSparseSet
+		private readonly FastSparseSetFactory<int>.FastSparseSet<int>[][] elements = new FastSparseSetFactory<int>.FastSparseSet<int>
 			[3][];
 
 		private readonly int[][] next = new int[3][];
@@ -26,7 +26,7 @@ namespace JetBrainsDecompiler.Util
 			{
 				for (int i = 2; i >= 0; i--)
 				{
-					FastSparseSetFactory.FastSparseSet<int>[] empty = FastSparseSetFactory.FastSparseSet
+					FastSparseSetFactory<int>.FastSparseSet<int>[] empty = FastSparseSetFactory<int>.FastSparseSet<int>
 						.Empty_Array;
 					elements[i] = empty;
 					next[i] = InterpreterUtil.Empty_Int_Array;
@@ -38,34 +38,34 @@ namespace JetBrainsDecompiler.Util
 		{
 			for (int i = 2; i >= 0; i--)
 			{
-				FastSparseSetFactory.FastSparseSet<int>[] arr = map.elements[i];
+				FastSparseSetFactory<int>.FastSparseSet<int>[] arr = map.elements[i];
 				int[] arrnext = map.next[i];
 				int length = arr.Length;
-				FastSparseSetFactory.FastSparseSet<int>[] arrnew = new FastSparseSetFactory.FastSparseSet
+				FastSparseSetFactory<int>.FastSparseSet<int>[] arrnew = new FastSparseSetFactory<int>.FastSparseSet<int>
 					[length];
 				int[] arrnextnew = new int[length];
 				System.Array.Copy(arr, 0, arrnew, 0, length);
 				System.Array.Copy(arrnext, 0, arrnextnew, 0, length);
 				elements[i] = arrnew;
 				next[i] = arrnextnew;
-				size__ = map.size;
+				size__ = map.Size();
 			}
 		}
 
 		public virtual SFormsFastMapDirect GetCopy()
 		{
 			SFormsFastMapDirect map = new SFormsFastMapDirect(false);
-			map.size = size__;
-			FastSparseSetFactory.FastSparseSet[][] mapelements = map.elements;
+			map.size__ = size__;
+			FastSparseSetFactory<int>.FastSparseSet<int>[][] mapelements = map.elements;
 			int[][] mapnext = map.next;
 			for (int i = 2; i >= 0; i--)
 			{
-				FastSparseSetFactory.FastSparseSet<int>[] arr = elements[i];
+				FastSparseSetFactory<int>.FastSparseSet<int>[] arr = elements[i];
 				int length = arr.Length;
 				if (length > 0)
 				{
 					int[] arrnext = next[i];
-					FastSparseSetFactory.FastSparseSet<int>[] arrnew = new FastSparseSetFactory.FastSparseSet
+					FastSparseSetFactory<int>.FastSparseSet<int>[] arrnew = new FastSparseSetFactory<int>.FastSparseSet<int>
 						[length];
 					int[] arrnextnew = new int[length];
 					System.Array.Copy(arrnext, 0, arrnextnew, 0, length);
@@ -74,7 +74,7 @@ namespace JetBrainsDecompiler.Util
 					int pointer = 0;
 					do
 					{
-						FastSparseSetFactory.FastSparseSet<int> set = arr[pointer];
+						FastSparseSetFactory<int>.FastSparseSet<int> set = arr[pointer];
 						if (set != null)
 						{
 							arrnew[pointer] = set.GetCopy();
@@ -85,7 +85,7 @@ namespace JetBrainsDecompiler.Util
 				}
 				else
 				{
-					mapelements[i] = FastSparseSetFactory.FastSparseSet.Empty_Array;
+					mapelements[i] = FastSparseSetFactory<int>.FastSparseSet<int>.Empty_Array;
 					mapnext[i] = InterpreterUtil.Empty_Int_Array;
 				}
 			}
@@ -102,18 +102,18 @@ namespace JetBrainsDecompiler.Util
 			return size__ == 0;
 		}
 
-		public virtual void Put(int key, FastSparseSetFactory.FastSparseSet<int> value)
+		public virtual void Put(int key, FastSparseSetFactory<int>.FastSparseSet<int> value)
 		{
 			PutInternal(key, value, false);
 		}
 
 		public virtual void RemoveAllFields()
 		{
-			FastSparseSetFactory.FastSparseSet<int>[] arr = elements[2];
+			FastSparseSetFactory<int>.FastSparseSet<int>[] arr = elements[2];
 			int[] arrnext = next[2];
 			for (int i = arr.Length - 1; i >= 0; i--)
 			{
-				FastSparseSetFactory.FastSparseSet<int> val = arr[i];
+				FastSparseSetFactory<int>.FastSparseSet<int> val = arr[i];
 				if (val != null)
 				{
 					arr[i] = null;
@@ -123,7 +123,7 @@ namespace JetBrainsDecompiler.Util
 			}
 		}
 
-		public virtual void PutInternal(int key, FastSparseSetFactory.FastSparseSet<int> 
+		public virtual void PutInternal(int key, FastSparseSetFactory<int>.FastSparseSet<int> 
 			value, bool remove)
 		{
 			int index = 0;
@@ -138,7 +138,7 @@ namespace JetBrainsDecompiler.Util
 				index = 1;
 				ikey -= VarExprent.Stack_Base;
 			}
-			FastSparseSetFactory.FastSparseSet<int>[] arr = elements[index];
+			FastSparseSetFactory<int>.FastSparseSet<int>[] arr = elements[index];
 			if (ikey >= arr.Length)
 			{
 				if (remove)
@@ -150,7 +150,7 @@ namespace JetBrainsDecompiler.Util
 					arr = EnsureCapacity(index, ikey + 1, false);
 				}
 			}
-			FastSparseSetFactory.FastSparseSet<int> oldval = arr[ikey];
+			FastSparseSetFactory<int>.FastSparseSet<int> oldval = arr[ikey];
 			arr[ikey] = value;
 			int[] arrnext = next[index];
 			if (oldval == null && value != null)
@@ -185,7 +185,7 @@ namespace JetBrainsDecompiler.Util
 			return Get(key) != null;
 		}
 
-		public virtual FastSparseSetFactory.FastSparseSet<int> Get(int key)
+		public virtual FastSparseSetFactory<int>.FastSparseSet<int> Get(int key)
 		{
 			int index = 0;
 			if (key < 0)
@@ -198,7 +198,7 @@ namespace JetBrainsDecompiler.Util
 				index = 1;
 				key -= VarExprent.Stack_Base;
 			}
-			FastSparseSetFactory.FastSparseSet<int>[] arr = elements[index];
+			FastSparseSetFactory<int>.FastSparseSet<int>[] arr = elements[index];
 			if (key < arr.Length)
 			{
 				return arr[key];
@@ -210,24 +210,24 @@ namespace JetBrainsDecompiler.Util
 		{
 			for (int i = 2; i >= 0; i--)
 			{
-				FastSparseSetFactory.FastSparseSet<int>[] lstOwn = elements[i];
+				FastSparseSetFactory<int>.FastSparseSet<int>[] lstOwn = elements[i];
 				if (lstOwn.Length == 0)
 				{
 					continue;
 				}
-				FastSparseSetFactory.FastSparseSet<int>[] lstExtern = map.elements[i];
+				FastSparseSetFactory<int>.FastSparseSet<int>[] lstExtern = map.elements[i];
 				int[] arrnext = next[i];
 				int pointer = 0;
 				do
 				{
-					FastSparseSetFactory.FastSparseSet<int> first = lstOwn[pointer];
+					FastSparseSetFactory<int>.FastSparseSet<int> first = lstOwn[pointer];
 					if (first != null)
 					{
 						if (pointer >= lstExtern.Length)
 						{
 							break;
 						}
-						FastSparseSetFactory.FastSparseSet<int> second = lstExtern[pointer];
+						FastSparseSetFactory<int>.FastSparseSet<int> second = lstExtern[pointer];
 						if (second != null)
 						{
 							first.Complement(second);
@@ -249,20 +249,20 @@ namespace JetBrainsDecompiler.Util
 		{
 			for (int i = 2; i >= 0; i--)
 			{
-				FastSparseSetFactory.FastSparseSet<int>[] lstOwn = elements[i];
+				FastSparseSetFactory<int>.FastSparseSet<int>[] lstOwn = elements[i];
 				if (lstOwn.Length == 0)
 				{
 					continue;
 				}
-				FastSparseSetFactory.FastSparseSet<int>[] lstExtern = map.elements[i];
+				FastSparseSetFactory<int>.FastSparseSet<int>[] lstExtern = map.elements[i];
 				int[] arrnext = next[i];
 				int pointer = 0;
 				do
 				{
-					FastSparseSetFactory.FastSparseSet<int> first = lstOwn[pointer];
+					FastSparseSetFactory<int>.FastSparseSet<int> first = lstOwn[pointer];
 					if (first != null)
 					{
-						FastSparseSetFactory.FastSparseSet<int> second = null;
+						FastSparseSetFactory<int>.FastSparseSet<int> second = null;
 						if (pointer < lstExtern.Length)
 						{
 							second = lstExtern[pointer];
@@ -288,12 +288,12 @@ namespace JetBrainsDecompiler.Util
 		{
 			for (int i = 2; i >= 0; i--)
 			{
-				FastSparseSetFactory.FastSparseSet<int>[] lstExtern = map.elements[i];
+				FastSparseSetFactory<int>.FastSparseSet<int>[] lstExtern = map.elements[i];
 				if (lstExtern.Length == 0)
 				{
 					continue;
 				}
-				FastSparseSetFactory.FastSparseSet<int>[] lstOwn = elements[i];
+				FastSparseSetFactory<int>.FastSparseSet<int>[] lstOwn = elements[i];
 				int[] arrnext = next[i];
 				int[] arrnextExtern = map.next[i];
 				int pointer = 0;
@@ -304,10 +304,10 @@ namespace JetBrainsDecompiler.Util
 						lstOwn = EnsureCapacity(i, lstExtern.Length, true);
 						arrnext = next[i];
 					}
-					FastSparseSetFactory.FastSparseSet<int> second = lstExtern[pointer];
+					FastSparseSetFactory<int>.FastSparseSet<int> second = lstExtern[pointer];
 					if (second != null)
 					{
-						FastSparseSetFactory.FastSparseSet<int> first = lstOwn[pointer];
+						FastSparseSetFactory<int>.FastSparseSet<int> first = lstOwn[pointer];
 						if (first == null)
 						{
 							lstOwn[pointer] = second.GetCopy();
@@ -328,12 +328,12 @@ namespace JetBrainsDecompiler.Util
 		public override string ToString()
 		{
 			StringBuilder buffer = new StringBuilder("{");
-			List<KeyValuePair<int, FastSparseSetFactory.FastSparseSet<int>>> lst = EntryList
+			List<KeyValuePair<int, FastSparseSetFactory<int>.FastSparseSet<int>>> lst = EntryList
 				();
 			if (lst != null)
 			{
 				bool first = true;
-				foreach (KeyValuePair<int, FastSparseSetFactory.FastSparseSet<int>> entry in lst)
+				foreach (KeyValuePair<int, FastSparseSetFactory<int>.FastSparseSet<int>> entry in lst)
 				{
 					if (!first)
 					{
@@ -351,20 +351,19 @@ namespace JetBrainsDecompiler.Util
 			return buffer.ToString();
 		}
 
-		public virtual List<KeyValuePair<int, FastSparseSetFactory.FastSparseSet<int>>> 
-			EntryList()
+		public virtual List<KeyValuePair<int, FastSparseSetFactory<int>.FastSparseSet<int>>> EntryList()
 		{
-			List<KeyValuePair<int, FastSparseSetFactory.FastSparseSet<int>>> list = new List
-				<KeyValuePair<int, FastSparseSetFactory.FastSparseSet<int>>>();
+			List<KeyValuePair<int, FastSparseSetFactory<int>.FastSparseSet<int>>> list = new List
+				<KeyValuePair<int, FastSparseSetFactory<int>.FastSparseSet<int>>>();
 			for (int i = 2; i >= 0; i--)
 			{
 				int ikey = 0;
-				foreach (FastSparseSetFactory.FastSparseSet<int> ent in elements[i])
+				foreach (FastSparseSetFactory<int>.FastSparseSet<int> ent in elements[i])
 				{
 					if (ent != null)
 					{
 						int key = i == 0 ? ikey : (i == 1 ? ikey + VarExprent.Stack_Base : -ikey);
-						list.Add(new _KeyValuePair_346(key, ent));
+						list.Add(new KeyValuePair<int, FastSparseSetFactory<int>.FastSparseSet<int>>(key, ent));
 					}
 					ikey++;
 				}
@@ -372,52 +371,10 @@ namespace JetBrainsDecompiler.Util
 			return list;
 		}
 
-		private sealed class _KeyValuePair_346 : KeyValuePair<int, FastSparseSetFactory.FastSparseSet
-			<int>>
-		{
-			public _KeyValuePair_346(int key, FastSparseSetFactory.FastSparseSet<int> ent)
-			{
-				this.key = key;
-				this.ent = ent;
-				this.var = key;
-				this.val = ent;
-			}
-
-			private readonly int var;
-
-			private readonly FastSparseSetFactory.FastSparseSet<int> val;
-
-			public int Key
-			{
-				get
-				{
-					return this.var;
-				}
-			}
-
-			public FastSparseSetFactory.FastSparseSet<int> Value
-			{
-				get
-				{
-					return this.val;
-				}
-			}
-
-			public FastSparseSetFactory.FastSparseSet<int> SetValue(FastSparseSetFactory.FastSparseSet
-				<int> newvalue)
-			{
-				return null;
-			}
-
-			private readonly int key;
-
-			private readonly FastSparseSetFactory.FastSparseSet<int> ent;
-		}
-
-		private FastSparseSetFactory.FastSparseSet<int>[] EnsureCapacity(int index, int size
+		private FastSparseSetFactory<int>.FastSparseSet<int>[] EnsureCapacity(int index, int size
 			, bool exact)
 		{
-			FastSparseSetFactory.FastSparseSet<int>[] arr = elements[index];
+			FastSparseSetFactory<int>.FastSparseSet<int>[] arr = elements[index];
 			int[] arrnext = next[index];
 			int minsize = size;
 			if (!exact)
@@ -428,7 +385,7 @@ namespace JetBrainsDecompiler.Util
 					minsize = size;
 				}
 			}
-			FastSparseSetFactory.FastSparseSet<int>[] arrnew = new FastSparseSetFactory.FastSparseSet
+			FastSparseSetFactory<int>.FastSparseSet<int>[] arrnew = new FastSparseSetFactory<int>.FastSparseSet<int>
 				[minsize];
 			System.Array.Copy(arr, 0, arrnew, 0, arr.Length);
 			int[] arrnextnew = new int[minsize];
