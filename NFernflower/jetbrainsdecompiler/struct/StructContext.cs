@@ -64,6 +64,7 @@ namespace JetBrainsDecompiler.Struct
 		{
 			foreach (ContextUnit unit in units.Values)
 			{
+				if (string.IsNullOrEmpty(unit.filename)) continue;
 				if (unit.IsOwn())
 				{
 					unit.Save();

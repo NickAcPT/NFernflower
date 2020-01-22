@@ -64,15 +64,13 @@ namespace JetBrainsDecompiler.Main.Decompiler
 				return;
 			}
 			FileSystemInfo destination = new DirectoryInfo(args[args.Length - 1]);
-			/*
-			 TODO: Add this check back
-			if (!destination.IsDirectory())
+			 // TODO: Add this check back
+			if (!destination.Exists)
 			{
 				System.Console.Out.WriteLine("error: destination '" + destination + "' is not a directory"
 					);
 				return;
 			}
-			*/
 			PrintStreamLogger logger = new PrintStreamLogger(System.Console.Out);
 			ConsoleDecompiler decompiler = new ConsoleDecompiler(destination, mapOptions, logger
 				);
@@ -89,14 +87,22 @@ namespace JetBrainsDecompiler.Main.Decompiler
 
 		private static void AddPath(List<FileSystemInfo> list, string path)
 		{
-			FileSystemInfo file = new DirectoryInfo(path);
+			FileSystemInfo file = new FileInfo(path);
 			if (file.Exists)
 			{
 				list.Add(file);
 			}
 			else
 			{
-				System.Console.Out.WriteLine("warn: missing '" + path + "', ignored");
+				FileSystemInfo dir = new FileInfo(path);
+				if (dir.Exists)
+				{
+					list.Add(dir);
+				}
+				else
+				{
+					System.Console.Out.WriteLine("warn: missing '" + path + "', ignored");
+				}
 			}
 		}
 

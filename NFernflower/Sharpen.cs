@@ -361,14 +361,17 @@ namespace Sharpen {
             return info.GetParameters().Select(c => c.ParameterType).ToList();
         }
 
-        public static int NumberOfTrailingZeros(in long word)
+        public static int NumberOfTrailingZeros(in long i)
         {
-            var mask = 1;
-            for (var i = 0; i < 64; i++, mask <<= 1)
-                if ((word & mask) != 0)
-                    return i;
-
-            return 64;
+            int x, y;
+            if (i == 0) return 64;
+            int n = 63;
+            y = (int)i; if (y != 0) { n = n -32; x = y; } else x = (int)(i>>32);
+            y = x <<16; if (y != 0) { n = n -16; x = y; }
+            y = x << 8; if (y != 0) { n = n - 8; x = y; }
+            y = x << 4; if (y != 0) { n = n - 4; x = y; }
+            y = x << 2; if (y != 0) { n = n - 2; x = y; }
+            return n - ((x << 1) >> 31);
         }
 
         public static string ReplaceAll(this string source, string pattern, string replacement)

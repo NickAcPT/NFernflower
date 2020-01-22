@@ -23,7 +23,7 @@ namespace JetBrainsDecompiler.Struct
 
 		private readonly string archivePath;
 
-		private readonly string filename;
+		internal readonly string filename;
 
 		private readonly IIResultSaver resultSaver;
 
@@ -48,7 +48,7 @@ namespace JetBrainsDecompiler.Struct
 			// class file or jar/zip entry
 			this.type = type;
 			this.own = own;
-			this.archivePath = archivePath;
+			this.archivePath = string.IsNullOrEmpty(archivePath) ? "." : archivePath;
 			this.filename = filename;
 			this.resultSaver = resultSaver;
 			this.decompiledData = decompiledData;

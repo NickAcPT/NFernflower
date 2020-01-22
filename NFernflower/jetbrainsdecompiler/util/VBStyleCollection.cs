@@ -218,31 +218,5 @@ namespace JetBrainsDecompiler.Util
 				}
 			}
 		}
-
-		public IEnumerator<E> GetEnumerator()
-		{
-			throw new NotImplementedException();
-		}
-
-		public int IndexOf(E item)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void Insert(int index, E item)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void RemoveAt(int index)
-		{
-			throw new NotImplementedException();
-		}
-
-		public E this[int index]
-		{
-			get => throw new NotImplementedException();
-			set => throw new NotImplementedException();
-		}
 	}
 }
