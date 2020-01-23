@@ -169,7 +169,7 @@ namespace JetBrainsDecompiler.Modules.Code
 					if (setFinallyExits.Contains(block))
 					{
 						setFinallyExits.Remove(block);
-						setFinallyExits.Add(setPreds.GetEnumerator().Current);
+						setFinallyExits.Add(new Sharpen.EnumeratorAdapter<BasicBlock>(setPreds.GetEnumerator()).Next());
 					}
 					// replace first if necessary
 					if (graph.GetFirst() == block)
@@ -180,7 +180,7 @@ namespace JetBrainsDecompiler.Modules.Code
 						}
 						else
 						{
-							graph.SetFirst(setSuccs.GetEnumerator().Current);
+							graph.SetFirst(new Sharpen.EnumeratorAdapter<BasicBlock>(setSuccs.GetEnumerator()).Next());
 						}
 					}
 					// remove this block
@@ -281,7 +281,8 @@ namespace JetBrainsDecompiler.Modules.Code
 						continue;
 					}
 					// multiple predecessors, obfuscated range
-					BasicBlock predBlock = setPreds.GetEnumerator().Current;
+					var setPredsEnumerator = new EnumeratorAdapter<BasicBlock>(setPreds.GetEnumerator());
+					BasicBlock predBlock = setPredsEnumerator.Next();
 					InstructionSequence predSeq = predBlock.GetSeq();
 					if (predSeq.IsEmpty() || predSeq.GetLastInstr().opcode != ICodeConstants.opc_monitorenter)
 					{
@@ -324,7 +325,7 @@ namespace JetBrainsDecompiler.Modules.Code
 						continue;
 					}
 					// non-unique successor
-					BasicBlock succBlock = setSuccs.GetEnumerator().Current;
+					BasicBlock succBlock = new Sharpen.EnumeratorAdapter<BasicBlock>(setSuccs.GetEnumerator()).Next();
 					InstructionSequence succSeq = succBlock.GetSeq();
 					int succ_monitorexit_index = -1;
 					for (int i = 0; i < succSeq.Length(); i++)

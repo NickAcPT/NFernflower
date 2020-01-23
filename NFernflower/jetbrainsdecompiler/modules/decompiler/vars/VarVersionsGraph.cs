@@ -31,7 +31,9 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Vars
 		{
 			if (domnodes.Count == 1)
 			{
-				return engine.IsDominator(node, domnodes.GetEnumerator().Current);
+				var enumerator = domnodes.GetEnumerator();
+				enumerator.MoveNext();
+				return engine.IsDominator(node, enumerator.Current);
 			}
 			else
 			{

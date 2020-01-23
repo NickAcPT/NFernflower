@@ -26,7 +26,7 @@ namespace JetBrainsDecompiler.Util
 			map = new Dictionary<K, int>(initialCapacity);
 		}
 
-		public bool Add(E element)
+		public new bool Add(E element)
 		{
 			lstKeys.Add(default);
 			base.Add(element);
@@ -153,30 +153,12 @@ namespace JetBrainsDecompiler.Util
 			return map.ContainsKey(key);
 		}
 
-		public void Clear()
+		public new void Clear()
 		{
 			map.Clear();
 			lstKeys.Clear();
 			base.Clear();
 		}
-
-		public bool Contains(E item)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void CopyTo(E[] array, int arrayIndex)
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool Remove(E item)
-		{
-			throw new NotImplementedException();
-		}
-
-		public int Count { get; }
-		public bool IsReadOnly { get; }
 
 		public object Clone()
 		{

@@ -1,6 +1,8 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using JetBrainsDecompiler.Code;
 using JetBrainsDecompiler.Modules.Decompiler.Exps;
 using JetBrainsDecompiler.Modules.Decompiler.Sforms;
@@ -200,14 +202,19 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			foreach (VarVersionPair varpaar in setVars)
 			{
 				VarVersionNode node = ssau.GetSsuversions().nodes.GetWithKey(varpaar);
-				for (IEnumerator<KeyValuePair<int, FastSparseSetFactory<int>.FastSparseSet<int>>> itent
-					 = node.live.EntryList().GetEnumerator(); itent.MoveNext(); )
+				var toRemove = new List<KeyValuePair<int, FastSparseSetFactory<int>.FastSparseSet<int>>>();
+				var entryList = node.live.EntryList();
+				for (var index = 0; index < entryList.Count; index++)
 				{
-					KeyValuePair<int, FastSparseSetFactory<int>.FastSparseSet<int>> ent = itent.Current;
+					var itent = entryList[index];
+					KeyValuePair<int, FastSparseSetFactory<int>.FastSparseSet<int>> ent =
+						entryList.ElementAtOrDefault(index + 1);
+					if (ent.Value == null) break;
+					
 					int key = ent.Key;
 					if (!livemap.ContainsKey(key))
 					{
-						node.live.EntryList().Remove(itent.Current);
+						toRemove.Add(itent);
 					}
 					else
 					{
@@ -215,9 +222,15 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 						set.Complement(livemap.Get(key));
 						if (set.IsEmpty())
 						{
-							node.live.EntryList().Remove(itent.Current);
+							toRemove.Add(itent);
 						}
 					}
+				}
+
+				foreach (var keyValuePair in toRemove)
+				{
+					node.live.PutInternal(keyValuePair.Key, keyValuePair.Value, true);
+					// entryList.RemoveAll(c => c.Key == keyValuePair.Key);
 				}
 			}
 		}
@@ -229,9 +242,9 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			int changed = 0;
 			foreach (Exprent expr in exprent.GetAllExprents())
 			{
+				var oldExpr = expr;
 				while (true)
 				{
-					var oldExpr = expr;
 					object[] arr = IterateChildExprent(oldExpr, exprent, next, mapVarValues, ssau);
 					Exprent retexpr = (Exprent)arr[0];
 					changed |= (bool)arr[1] ? 1 : 0;
@@ -410,9 +423,9 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			bool changed = false;
 			foreach (Exprent expr in exprent.GetAllExprents())
 			{
+				var oldExpr = expr;
 				while (true)
 				{
-					var oldExpr = expr;
 					object[] arr = IterateChildExprent(oldExpr, parent, next, mapVarValues, ssau);
 					Exprent retexpr = (Exprent)arr[0];
 					changed |= (bool)arr[1];

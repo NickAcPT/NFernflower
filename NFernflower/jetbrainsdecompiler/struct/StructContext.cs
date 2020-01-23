@@ -1,7 +1,7 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System.Collections.Generic;
 using System.IO;
-using ICSharpCode.SharpZipLib.Zip;
+using System.IO.Compression;
 using Java.Util;
 using Java.Util.Jar;
 using JetBrainsDecompiler.Main;
@@ -131,6 +131,7 @@ namespace JetBrainsDecompiler.Struct
 					unit = new ContextUnit(ContextUnit.Type_Folder, null, path, isOwn, saver, decompiledData
 						);
 					Sharpen.Collections.Put(units, path, unit);
+					units.RemoveIf(c => string.IsNullOrEmpty(c.Key));
 				}
 				if (filename.EndsWith(".class"))
 				{
@@ -162,10 +163,9 @@ namespace JetBrainsDecompiler.Struct
 		/// <exception cref="System.IO.IOException"/>
 		private void AddArchive(string path, FileSystemInfo file, int type, bool isOwn)
 		{
-			using (ZipFile archive = new ZipFile
-				(file.FullName))
+			using (ZipArchive archive = ZipFile.Open((file.FullName), ZipArchiveMode.Read))
 			{
-				foreach (ZipEntry entry in archive) {
+				foreach (ZipArchiveEntry entry in archive.Entries) {
 					ContextUnit unit = units.GetOrNull(path + "/" + file.Name);
 					if (unit == null)
 					{
@@ -177,8 +177,8 @@ namespace JetBrainsDecompiler.Struct
 						}
 						Sharpen.Collections.Put(units, path + "/" + file.Name, unit);
 					}
-					string name = entry.Name;
-					if (!entry.IsDirectory)
+					string name = entry.FullName;
+					if (!(entry.FullName.EndsWith('/') || entry.FullName.EndsWith('\\'))) //IsDirectory
 					{
 						if (name.EndsWith(".class"))
 						{
@@ -196,7 +196,7 @@ namespace JetBrainsDecompiler.Struct
 					}
 					else
 					{
-						unit.AddDirEntry(name);
+						unit.AddDirEntry(Path.GetDirectoryName(entry.FullName));
 					}
 				}
 			}

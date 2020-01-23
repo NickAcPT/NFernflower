@@ -1,8 +1,8 @@
 // Copyright 2000-2017 JetBrains s.r.o. Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE file.
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Runtime.InteropServices;
-using ICSharpCode.SharpZipLib.Zip;
 using JetBrainsDecompiler.Code.Cfg;
 using ObjectWeb.Misc.Java.IO;
 using Sharpen;
@@ -26,6 +26,7 @@ namespace JetBrainsDecompiler.Util
 		}
 
 		/// <exception cref="IOException"/>
+		/*
 		public static void CopyStream(InputStream @in, ZipOutputStream @out)
 		{
 			byte[] buffer = new byte[Buffer_Size];
@@ -35,7 +36,8 @@ namespace JetBrainsDecompiler.Util
 				@out.Write(buffer, 0, len);
 			}
 		}
-		public static void CopyStream(InputStream @in, OutputStream @out)
+		*/
+		public static void CopyStream(InputStream @in, Stream @out)
 		{
 			byte[] buffer = new byte[Buffer_Size];
 			int len;
@@ -46,9 +48,9 @@ namespace JetBrainsDecompiler.Util
 		}
 
 		/// <exception cref="IOException"/>
-		public static byte[] GetBytes(ICSharpCode.SharpZipLib.Zip.ZipFile archive, ZipEntry entry)
+		public static byte[] GetBytes(ZipArchive archive, ZipArchiveEntry entry)
 		{
-			return archive.GetInputStream(entry).ReadFully();
+			return entry.Open().ReadFully();
 		}
 
 		/// <exception cref="IOException"/>

@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using ObjectWeb.Misc.Java.IO;
 
@@ -24,6 +25,12 @@ namespace ObjectWeb.Misc.Java.Nio
         public static implicit operator MemoryInputStream(MemoryStream stream)
         {
             return new MemoryInputStream(stream);
+        }
+
+        public override void Close()
+        {
+            Stream.Dispose();
+            base.Close();
         }
 
         public override int Read()

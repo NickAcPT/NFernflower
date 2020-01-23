@@ -135,7 +135,7 @@ namespace JetBrainsDecompiler.Struct
 					// directory entries
 					foreach (string dirEntry in dirEntries)
 					{
-						resultSaver.SaveDirEntry(archivePath, filename, dirEntry);
+						resultSaver.SaveDirEntry(archivePath, filename, dirEntry + "\\");
 					}
 					// non-class entries
 					foreach (string[] pair in otherEntries)

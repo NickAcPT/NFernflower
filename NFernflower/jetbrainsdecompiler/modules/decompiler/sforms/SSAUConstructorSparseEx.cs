@@ -325,13 +325,13 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 								FastSparseSetFactory<int>.FastSparseSet<int> vers = factory.SpawnEmptySet();
 								if (vernode.preds.Count == 1)
 								{
-									vers.Add(vernode.preds.GetEnumerator().Current.source.version);
+									vers.Add(new Sharpen.EnumeratorAdapter<VarVersionEdge>(vernode.preds.GetEnumerator()).Next().source.version);
 								}
 								else
 								{
 									foreach (VarVersionEdge edge in vernode.preds)
 									{
-										vers.Add(edge.source.preds.GetEnumerator().Current.source.version);
+										vers.Add(new Sharpen.EnumeratorAdapter<VarVersionEdge>(edge.source.preds.GetEnumerator()).Next().source.version);
 									}
 								}
 								vers.Add(nextver);
@@ -374,7 +374,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 						vardest.SetVersion(usever);
 						SetCurrentVar(varmap, varindex, usever);
 						// ssu graph
-						int lastver = vers.GetEnumerator().Current;
+						int lastver = new Sharpen.EnumeratorAdapter<int>(vers.GetEnumerator()).Next();
 						VarVersionNode prenode = ssuversions.nodes.GetWithKey(new VarVersionPair(varindex
 							, lastver));
 						VarVersionNode usenode = ssuversions.CreateNode(new VarVersionPair(varindex, usever
@@ -434,7 +434,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 			{
 				foreach (VarVersionEdge edge in lstPreds)
 				{
-					int verssrc = edge.source.preds.GetEnumerator().Current.source.version;
+					int verssrc = new Sharpen.EnumeratorAdapter<VarVersionEdge>(edge.source.preds.GetEnumerator()).Next().source.version;
 					if (!vers.Contains(verssrc) && verssrc != ppvers)
 					{
 						edge.source.RemoveSuccessor(edge);

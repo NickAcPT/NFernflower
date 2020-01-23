@@ -266,7 +266,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Stats
 					setPreds.Remove(first);
 					if (!(setPreds.Count == 0))
 					{
-						Statement pred = setPreds.GetEnumerator().Current;
+						Statement pred = new Sharpen.EnumeratorAdapter<Statement>(setPreds.GetEnumerator()).Next();
 						// assumption: at most one predecessor node besides the head. May not hold true for obfuscated code.
 						for (int j = 0; j < nodes.Count; j++)
 						{

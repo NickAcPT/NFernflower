@@ -65,7 +65,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Deobfuscator
 					}
 					else
 					{
-						_T989645285 pred = node.preds.GetEnumerator().Current;
+						_T989645285 pred = new Sharpen.EnumeratorAdapter<_T989645285>(node.preds.GetEnumerator()).Next();
 						Sharpen.Collections.AddAll(pred.succs, node.succs);
 						pred.succs.Remove(node);
 						foreach (_T989645285 succ in node.succs)

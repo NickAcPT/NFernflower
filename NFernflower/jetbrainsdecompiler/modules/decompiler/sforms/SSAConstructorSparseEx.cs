@@ -237,7 +237,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler.Sforms
 				{
 					// == 1
 					// set version
-					int it = vers.GetEnumerator().Current;
+					int it = new Sharpen.EnumeratorAdapter<int>(vers.GetEnumerator()).Next();
 					vardest.SetVersion(it);
 				}
 				else if (cardinality == 2)

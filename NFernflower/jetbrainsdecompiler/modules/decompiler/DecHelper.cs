@@ -106,7 +106,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 					}
 					else if (setPred.Count == 1)
 					{
-						Statement pred = setPred.GetEnumerator().Current;
+						Statement pred = new Sharpen.EnumeratorAdapter<Statement>(setPred.GetEnumerator()).Next();
 						while (lst.Contains(pred))
 						{
 							HashSet<Statement> setPredTemp = pred.GetNeighboursSet(StatEdge.Type_Regular, Statement
@@ -115,7 +115,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 							if (!(setPredTemp.Count == 0))
 							{
 								// at most 1 predecessor
-								pred = setPredTemp.GetEnumerator().Current;
+								pred = new Sharpen.EnumeratorAdapter<Statement>(setPredTemp.GetEnumerator()).Next();
 								if (pred == stat)
 								{
 									return false;

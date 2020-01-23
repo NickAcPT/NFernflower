@@ -366,8 +366,8 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 			{
 				if (mapEdges.Count == 1)
 				{
-					List<StatEdge> lstEdges = mapEdges.Values.GetEnumerator().Current;
-					if (lstEdges.Count > 1 && mapEdges.Keys.GetEnumerator().Current.type != Statement
+					List<StatEdge> lstEdges = new Sharpen.EnumeratorAdapter<List<StatEdge>>(mapEdges.Values.GetEnumerator()).Next();
+					if (lstEdges.Count > 1 && new Sharpen.EnumeratorAdapter<Statement>(mapEdges.Keys.GetEnumerator()).Next().type != Statement
 						.Type_Dummyexit)
 					{
 						StatEdge edge_example = lstEdges[0];

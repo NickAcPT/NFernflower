@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ICSharpCode.SharpZipLib.Zip;
+using System.IO.Compression;
 using Java.Util.Jar;
 using JetBrainsDecompiler.Main;
 using JetBrainsDecompiler.Main.Extern;
@@ -110,8 +110,8 @@ namespace JetBrainsDecompiler.Main.Decompiler
 
 		private readonly Fernflower engine;
 
-		private readonly Dictionary<string, ZipOutputStream> mapArchiveStreams = new Dictionary
-			<string, ZipOutputStream>();
+		private readonly Dictionary<string, ZipArchive> mapArchiveStreams = new Dictionary
+			<string, ZipArchive>();
 
 		private readonly Dictionary<string, HashSet<string>> mapArchiveEntries = new Dictionary
 			<string, HashSet<string>>();
@@ -161,9 +161,9 @@ namespace JetBrainsDecompiler.Main.Decompiler
 			}
 			else
 			{
-				using (var archive = new ZipFile(file.FullName))
+				using (var archive = ZipFile.Open(file.FullName, ZipArchiveMode.Read))
 				{
-					ZipEntry entry = archive.GetEntry(internalPath);
+					var entry = archive.GetEntry(internalPath);
 					if (entry == null)
 					{
 						throw new IOException("Entry not found: " + internalPath);
@@ -178,7 +178,7 @@ namespace JetBrainsDecompiler.Main.Decompiler
 		// *******************************************************************
 		private string GetAbsolutePath(string path)
 		{
-			return Path.GetFullPath(path);
+			return Path.GetFullPath(Path.Combine(root.FullName, path));
 		}
 
 		public virtual void SaveFolder(string path)
@@ -231,8 +231,7 @@ namespace JetBrainsDecompiler.Main.Decompiler
 			try
 			{
 
-				ZipOutputStream zipStream = new ZipOutputStream(File.OpenWrite(file.FullName));
-				Sharpen.Collections.Put(mapArchiveStreams, file.FullName, zipStream);
+				Sharpen.Collections.Put(mapArchiveStreams, file.FullName, ZipFile.Open(file.FullName, ZipArchiveMode.Update));
 			}
 			catch (IOException ex)
 			{
@@ -249,23 +248,23 @@ namespace JetBrainsDecompiler.Main.Decompiler
 		public virtual void CopyEntry(string source, string path, string archiveName, string
 			 entryName)
 		{
-			string file = new FileInfo(Path.Combine(GetAbsolutePath(path), archiveName)).FullName;
+			string file = Path.Combine(GetAbsolutePath(path), archiveName);
 			if (!CheckEntry(entryName, file))
 			{
 				return;
 			}
 			try
 			{
-				using (ZipFile srcArchive = new ZipFile(source))
+				using (ZipArchive srcArchive = ZipFile.Open(source, ZipArchiveMode.Read))
 				{
-					ZipEntry entry = srcArchive.GetEntry(entryName);
+					var entry = srcArchive.GetEntry(entryName);
 					if (entry != null)
 					{
-						using (var @in = new MemoryStream(srcArchive.GetInputStream(entry).ReadFully()).ToInputStream())
+						using (var @in = new MemoryStream(entry.Open().ReadFully()).ToInputStream())
 						{
-							ZipOutputStream @out = mapArchiveStreams.GetOrNull(file);
-							@out.PutNextEntry(new ZipEntry(entryName));
-							InterpreterUtil.CopyStream(@in, @out);
+							var @out = mapArchiveStreams.GetOrNull(file);
+							var newEntry = @out.CreateEntry(entryName);
+							InterpreterUtil.CopyStream(@in, newEntry.Open());
 						}
 					}
 				}
@@ -281,18 +280,21 @@ namespace JetBrainsDecompiler.Main.Decompiler
 		public virtual void SaveClassEntry(string path, string archiveName, string qualifiedName
 			, string entryName, string content)
 		{
-			string file = new FileInfo(Path.Combine(GetAbsolutePath(path), archiveName)).FullName;
+			string file = Path.Combine(GetAbsolutePath(path), archiveName);
 			if (!CheckEntry(entryName, file))
 			{
 				return;
 			}
 			try
 			{
-				ZipOutputStream @out = mapArchiveStreams.GetOrNull(file);
-				@out.PutNextEntry(new ZipEntry(entryName));
+				var @out = mapArchiveStreams.GetOrNull(file);
+				var newEntry = @out.CreateEntry(entryName);
 				if (content != null)
 				{
-					@out.Write(Sharpen.Runtime.GetBytesForString(content, "UTF-8"));
+					var stream = newEntry.Open();
+					stream.Write(Sharpen.Runtime.GetBytesForString(content, "UTF-8"));
+					stream.Flush();
+					stream.Close();
 				}
 			}
 			catch (IOException ex)
@@ -322,7 +324,7 @@ namespace JetBrainsDecompiler.Main.Decompiler
 			try
 			{
 				Sharpen.Collections.Remove(mapArchiveEntries, file);
-				Sharpen.Collections.Remove(mapArchiveStreams, file).Close();
+				Sharpen.Collections.Remove(mapArchiveStreams, file).Dispose();
 			}
 			catch (IOException)
 			{

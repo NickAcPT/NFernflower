@@ -11,10 +11,18 @@ namespace JetBrainsDecompiler.Util
 	public class DataInputFullStream : DataInputStream, IDisposable
 	{
 		public DataInputFullStream(byte[] bytes)
-			: base(new MemoryStream(bytes).ToInputStream())
+			: this(new MemoryStream(bytes).ToInputStream())
 		{
 		}
 
+		private DataInputFullStream(InputStream @in)
+			: base(@in)
+		{
+			Stream = @in;
+		}
+
+		public InputStream Stream { get; set; }
+		
 		/// <exception cref="IOException"/>
 		public virtual byte[] Read(int n)
 		{
@@ -29,7 +37,7 @@ namespace JetBrainsDecompiler.Util
 
 		public void Dispose()
 		{
-			throw new NotImplementedException();
+			Stream?.Close();
 		}
 	}
 }

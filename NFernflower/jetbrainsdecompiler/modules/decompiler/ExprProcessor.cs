@@ -211,7 +211,7 @@ namespace JetBrainsDecompiler.Modules.Decompiler
 							}
 						}
 						string ndentrykey = BuildEntryPointKey(ndentrypoints);
-						if (!mapSucc.ContainsKey(ndentrykey))
+						if (!mapSucc.ContainsKey(ndentrykey ?? Sharpen.Collections.NullStringKey))
 						{
 							Sharpen.Collections.Put(mapSucc, ndentrykey, CopyVarExprents(data.CopyStack()));
 							stack.AddLast(nd);
